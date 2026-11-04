@@ -28,7 +28,7 @@ cp .env.example .env
 
 If port `10808` or `10809` conflicts with existing developer services on your machine, adjust them in `.env`:
 
-```env
+```bash
 PORT=3000
 OPENCODE_HTTP_PROXY_PORT=19909
 OPENCODE_SOCKS_PROXY_PORT=19908
