@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build Outputs
+dist/
+src/frontend/dist/
+
+# Data and SQLite Runtime Storage
+data/*
+!data/.gitkeep
+*.db
+*.db-shm
+*.db-wal
+
+# Logs & Diagnostics
+*.log
+logs/
+
+# Compiled Binaries and Assets (Auto-downloaded by start.sh)
+bin/xray
+bin/geoip.dat
+bin/geosite.dat
+bin/LICENSE
+bin/README.md
+
+# Development and Local Indexers
+.omo/
+.codegraph
+.cache/
+.vscode/
+.idea/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS Metadata
+.DS_Store
+Thumbs.db

@@ -1,0 +1,61 @@
+{
+  "name": "opencode-router",
+  "version": "1.0.0",
+  "description": "Smart VPN & Connectivity Router for OpenCode on Ubuntu",
+  "main": "src/backend/server.ts",
+  "author": "Ehsan Shahryari <https://github.com/EhsanCreator>",
+  "license": "MIT",
+  "homepage": "https://github.com/EhsanCreator/OpenCode-Router#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EhsanCreator/OpenCode-Router.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EhsanCreator/OpenCode-Router/issues"
+  },
+  "scripts": {
+    "build:frontend": "cd src/frontend && npx vite build",
+    "build": "npm run build:frontend",
+    "start": "npx tsx src/backend/server.ts",
+    "dev:backend": "npx tsx watch src/backend/server.ts",
+    "dev:frontend": "cd src/frontend && npx vite",
+    "test": "npx tsx tests/test-scenarios.ts"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-router",
+    "v2ray",
+    "xray",
+    "vless",
+    "vmess",
+    "trojan",
+    "shadowsocks",
+    "proxy",
+    "rate-limit",
+    "ubuntu"
+  ],
+  "type": "commonjs",
+  "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "lucide-react": "^1.68.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "autoprefixer": "^10.6.2",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^4.3.4",
+    "vite": "^8.3.5"
+  }
+}
