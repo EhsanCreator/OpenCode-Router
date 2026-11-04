@@ -16,13 +16,13 @@ export const App: React.FC = () => {
     activeConnection: {
       id: 456,
       protocol: 'vless',
-      address: '89.144.53.4',
+      address: '198.51.100.15',
       port: 8445,
       remark: '🇩🇪 Frankfurt Fast-Track Node',
       security: 'reality',
       network: 'tcp',
       latency_ms: 187,
-      egress_ip: '144.31.150.117',
+      egress_ip: '198.51.100.117',
       connected_at: new Date().toISOString()
     },
     opencode: {

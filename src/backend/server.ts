@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { db, initDatabase, getSetting, setSetting } from './db/database';
 import { VpnEngine } from './vpn/vpn-engine';
 import { OpenCodeService } from './opencode/opencode-service';
@@ -279,15 +280,19 @@ app.delete('/api/sources/:id', (req: Request, res: Response) => {
 // Diagnostics
 app.get('/api/diagnostics', (req: Request, res: Response) => {
   const opencodeInfo = { ...opencode.getInfo() };
-  const userHome = process.env.HOME || '';
-  if (opencodeInfo.configPath && userHome) {
-    opencodeInfo.configPath = opencodeInfo.configPath.replace(userHome, '~');
-  }
+  const userHome = os.homedir() || process.env.HOME || '';
+  const sanitizePath = (p?: string): string => {
+    if (!p) return '';
+    if (userHome && p.startsWith(userHome)) {
+      return p.replace(userHome, '~');
+    }
+    return p;
+  };
+
+  opencodeInfo.configPath = sanitizePath(opencodeInfo.configPath);
   const privilegeStatus = { ...PrivilegeWizard.checkStatus() };
-  if (privilegeStatus.setupScriptPath && userHome) {
-    privilegeStatus.setupScriptPath = privilegeStatus.setupScriptPath.replace(userHome, '~');
-  }
-  const launcherPath = opencode.getLauncherPath().replace(userHome, '~');
+  privilegeStatus.setupScriptPath = sanitizePath(privilegeStatus.setupScriptPath);
+  const launcherPath = sanitizePath(opencode.getLauncherPath());
   const history = db.prepare(`
     SELECT h.*, c.remark, c.protocol, c.address, c.port
     FROM test_history h

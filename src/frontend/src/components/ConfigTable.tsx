@@ -22,7 +22,7 @@ const initialSampleItems: CandidateItem[] = [
   {
     id: 456,
     protocol: 'vless',
-    address: '89.144.53.4',
+    address: '198.51.100.15',
     port: 8445,
     remark: '🇩🇪 Frankfurt Fast-Track Node',
     security: 'reality',
@@ -33,7 +33,7 @@ const initialSampleItems: CandidateItem[] = [
   {
     id: 112,
     protocol: 'trojan',
-    address: '104.21.32.88',
+    address: '192.0.2.88',
     port: 443,
     remark: '🇳🇱 Amsterdam Cloud Router',
     security: 'tls',
@@ -44,7 +44,7 @@ const initialSampleItems: CandidateItem[] = [
   {
     id: 89,
     protocol: 'vmess',
-    address: '172.67.180.12',
+    address: '198.51.100.72',
     port: 443,
     remark: '🇫🇷 Paris Low-Ping Egress',
     security: 'tls',
@@ -55,7 +55,7 @@ const initialSampleItems: CandidateItem[] = [
   {
     id: 310,
     protocol: 'ss',
-    address: '198.51.100.24',
+    address: '203.0.113.24',
     port: 8388,
     remark: '🇬🇧 London Edge Proxy',
     security: 'aes-256-gcm',

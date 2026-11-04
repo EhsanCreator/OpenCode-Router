@@ -104,7 +104,7 @@ Copy this template into a local tracking log (e.g., `docs/logs/weekly-seo-log.md
 [Inspect Real Inquiries / Issues]
                 │
                 ▼
-[Identify Exact Error Message (e.g., "ETIMEDOUT 104.18.23.45")]
+[Identify Exact Error Message (e.g., "ETIMEDOUT 198.51.100.45")]
                 │
                 ▼
 [Add Practical Troubleshooting Entry to Target Article]

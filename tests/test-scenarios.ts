@@ -24,11 +24,11 @@ async function runTestSuite() {
   console.log('▶ Test 1: Parser and Validator Verification');
   {
     // VLESS
-    const vlessUrl = 'vless://d342d11e-d224-4463-b982-532309285094@172.64.155.209:443?security=tls&type=ws&path=%2F&host=ccc.xyz&sni=ccc.xyz&fp=chrome#US_Node';
+    const vlessUrl = 'vless://d342d11e-d224-4463-b982-532309285094@192.0.2.1:443?security=tls&type=ws&path=%2F&host=ccc.xyz&sni=ccc.xyz&fp=chrome#US_Node';
     const vlessParsed = ConfigParser.parse(vlessUrl);
     assert(vlessParsed !== null, 'VLESS should parse correctly');
     assert.strictEqual(vlessParsed?.protocol, 'vless');
-    assert.strictEqual(vlessParsed?.address, '172.64.155.209');
+    assert.strictEqual(vlessParsed?.address, '192.0.2.1');
     assert.strictEqual(vlessParsed?.port, 443);
     assert.strictEqual(vlessParsed?.security, 'tls');
     assert.strictEqual(vlessParsed?.network, 'ws');

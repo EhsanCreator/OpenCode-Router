@@ -10,7 +10,7 @@ Terminal error logs from OpenCode generally manifest in three forms:
 
 1. **Socket Connection Timeouts (`ETIMEDOUT`)**:
    ```text
-   Error: connect ETIMEDOUT 104.18.23.45:443
+   Error: connect ETIMEDOUT 198.51.100.45:443
    at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1146:16)
    ```
    *Cause*: The target API endpoint or intermediate CDN firewall dropped the initial TCP SYN packet without responding. Often caused by regional network filtering or ISP-level throttling.
