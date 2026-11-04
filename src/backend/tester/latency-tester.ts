@@ -87,7 +87,11 @@ export class LatencyTester {
       clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json() as { ip: string };
-        return json.ip || 'Unknown';
+        if (json.ip && json.ip.includes('.')) {
+          // Privacy protection: mask last two octets to avoid exposing personal host IP
+          return json.ip.split('.').slice(0, 2).concat(['*.*']).join('.');
+        }
+        return json.ip || 'Direct Network';
       }
     } catch {
       // ignore

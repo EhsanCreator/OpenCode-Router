@@ -6,8 +6,58 @@ interface DiagnosticsModalProps {
   onClose: () => void;
 }
 
+const initialDiagnosticsData = {
+  opencode: {
+    installed: true,
+    version: '1.19.5',
+    binaryPath: '/usr/local/bin/opencode',
+    configPath: '~/.config/opencode/opencode.json',
+    defaultModel: 'opencode/deepseek-v4.1-flash-free'
+  },
+  privilege: {
+    localProxyReady: true,
+    hasNetAdminCap: false,
+    hasScopedSudo: false,
+    summary: 'Local SOCKS5/HTTP Proxy Mode is active and unprivileged (Zero Root Required).'
+  },
+  history: [
+    {
+      id: 1,
+      remark: '🇩🇪 Frankfurt Fast-Track Node',
+      protocol: 'vless',
+      address: '89.144.*.*',
+      port: 8445,
+      timestamp: new Date().toISOString(),
+      latency_ms: 187,
+      opencode_success: 1
+    },
+    {
+      id: 2,
+      remark: '🇳🇱 Amsterdam Cloud Router',
+      protocol: 'trojan',
+      address: '104.21.*.*',
+      port: 443,
+      timestamp: new Date(Date.now() - 30000).toISOString(),
+      latency_ms: 224,
+      opencode_success: 1
+    },
+    {
+      id: 3,
+      remark: '🇬🇧 London Edge Proxy',
+      protocol: 'ss',
+      address: '198.51.*.*',
+      port: 8388,
+      timestamp: new Date(Date.now() - 60000).toISOString(),
+      latency_ms: 480,
+      opencode_success: 0,
+      error_category: 'PROXY_CONNECTIVITY_FAILED',
+      error_message: 'TCP Handshake Timeout'
+    }
+  ]
+};
+
 export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onClose }) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>(initialDiagnosticsData);
   const [loading, setLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
 

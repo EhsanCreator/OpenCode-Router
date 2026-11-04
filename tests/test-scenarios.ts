@@ -181,8 +181,7 @@ async function runTestSuite() {
     // Check that our current process global environment does NOT have system-wide TUN routing rules
     const normalIp = await LatencyTester.getNormalPublicIp();
     assert(typeof normalIp === 'string' && normalIp.length > 0, 'Normal internet remains operational');
-    const maskedIp = normalIp.split('.').slice(0, 2).concat(['*.*']).join('.');
-    console.log(`  ✔ OS network and developer tools untouched. Normal IP accessible (${maskedIp}).`);
+    console.log(`  ✔ OS network and developer tools untouched. Normal IP accessible (${normalIp}).`);
     console.log('  ✔ OpenCode proxy is isolated strictly through dedicated launcher.\n');
   }
 

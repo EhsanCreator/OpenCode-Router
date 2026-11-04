@@ -278,21 +278,36 @@ app.delete('/api/sources/:id', (req: Request, res: Response) => {
 
 // Diagnostics
 app.get('/api/diagnostics', (req: Request, res: Response) => {
-  const opencodeInfo = opencode.getInfo();
-  const privilegeStatus = PrivilegeWizard.checkStatus();
+  const opencodeInfo = { ...opencode.getInfo() };
+  const userHome = process.env.HOME || '';
+  if (opencodeInfo.configPath && userHome) {
+    opencodeInfo.configPath = opencodeInfo.configPath.replace(userHome, '~');
+  }
+  const privilegeStatus = { ...PrivilegeWizard.checkStatus() };
+  if (privilegeStatus.setupScriptPath && userHome) {
+    privilegeStatus.setupScriptPath = privilegeStatus.setupScriptPath.replace(userHome, '~');
+  }
+  const launcherPath = opencode.getLauncherPath().replace(userHome, '~');
   const history = db.prepare(`
     SELECT h.*, c.remark, c.protocol, c.address, c.port
     FROM test_history h
     JOIN configs c ON h.config_id = c.id
     ORDER BY h.id DESC
     LIMIT 15
-  `).all();
+  `).all() as any[];
+
+  const sanitizedHistory = history.map((item) => ({
+    ...item,
+    address: item.address && item.address.includes('.')
+      ? item.address.split('.').slice(0, 2).concat(['*.*']).join('.')
+      : item.address
+  }));
 
   res.json({
     opencode: opencodeInfo,
     privilege: privilegeStatus,
-    launcherScript: opencode.getLauncherPath(),
-    history
+    launcherScript: launcherPath,
+    history: sanitizedHistory
   });
 });
 
