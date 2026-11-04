@@ -1,3 +1,8 @@
+---
+title: "How to Fix OpenCode Network Errors on Linux"
+description: "Step-by-step technical guide to diagnosing and fixing OpenCode ETIMEDOUT, ECONNRESET, and DNS network errors on Linux with isolated user-space proxies."
+---
+
 # How to Fix OpenCode Network Errors on Linux
 
 When working with command-line AI coding tools like [OpenCode](https://github.com/anomaly/opencode) on Linux, network drops, broken TCP sockets, and DNS resolution failures can halt development sessions. This guide explains why OpenCode network errors occur on Linux (verified on **Ubuntu 24.04 LTS x86_64**), provides diagnostic techniques, and details practical solutions including process-isolated proxy routing with [OpenCode Router](https://github.com/EhsanCreator/OpenCode-Router).

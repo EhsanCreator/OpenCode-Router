@@ -1,3 +1,8 @@
+---
+title: "How to Configure a Proxy for OpenCode CLI"
+description: "Learn how to configure HTTP and SOCKS5 proxies for OpenCode CLI on Linux using environment variables, remote DNS resolution, and isolated launchers."
+---
+
 # How to Configure a Proxy for OpenCode CLI
 
 Configuring network proxies for command-line AI coding tools on Linux requires precision. Unlike desktop web browsers that provide intuitive graphical proxy menus, terminal tools like [OpenCode](https://github.com/anomaly/opencode) rely on standard POSIX environment variables. This guide explains how to properly configure HTTP and SOCKS5 proxies for OpenCode on Linux (verified on **Ubuntu 24.04 LTS x86_64**), avoid common misconfigurations, and utilize the process-isolated wrapper provided by [OpenCode Router](https://github.com/EhsanCreator/OpenCode-Router).

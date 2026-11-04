@@ -1,3 +1,8 @@
+---
+title: "Supported Anti-Censorship Protocols"
+description: "Overview of supported proxy protocols in OpenCode Router: VLESS with Reality, VMess AEAD, Trojan TLS, and Shadowsocks."
+---
+
 # Supported Anti-Censorship Protocols
 
 OpenCode Router natively parses, normalizes, and configures four major proxy protocols supported by Xray-core.

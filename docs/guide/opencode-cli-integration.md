@@ -1,3 +1,8 @@
+---
+title: "OpenCode CLI Integration"
+description: "How OpenCode Router seamlessly integrates with OpenCode CLI via bin/opencode-vpn without modifying system routing tables."
+---
+
 # OpenCode CLI Integration
 
 OpenCode Router provides a dedicated launcher wrapper (`bin/opencode-vpn`) that isolates proxy routing strictly to the OpenCode process tree.

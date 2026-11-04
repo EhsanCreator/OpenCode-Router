@@ -1,3 +1,8 @@
+---
+title: "Installation on Ubuntu Linux"
+description: "Prerequisites, automated environment setup, and installation steps for OpenCode Router on Ubuntu 24.04 LTS x86_64."
+---
+
 # Installation on Ubuntu Linux
 
 This guide details system prerequisites, environment setup, and installation steps for **OpenCode Router** on Linux.

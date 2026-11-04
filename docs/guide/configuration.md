@@ -1,3 +1,8 @@
+---
+title: "Configuration Guide"
+description: "Configure runtime parameters, inbound proxy ports, test timeouts, candidate limits, and subscription sources for OpenCode Router."
+---
+
 # Configuration Guide
 
 OpenCode Router is pre-configured to work out of the box with zero manual parameter setup. However, power users can customize runtime ports, timeouts, and paths using environment variables or a `.env` file.

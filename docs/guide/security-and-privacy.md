@@ -1,3 +1,8 @@
+---
+title: "Security and Privacy Architecture"
+description: "Security model of OpenCode Router: unprivileged execution, zero system TUN tampering, and RFC 5737 data sanitization."
+---
+
 # Security and Privacy Architecture
 
 OpenCode Router is designed following the principle of least privilege, strict process isolation, and local-first data privacy.

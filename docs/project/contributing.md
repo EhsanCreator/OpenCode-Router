@@ -1,3 +1,8 @@
+---
+title: "Contributing Guidelines"
+description: "Guidelines for contributing to OpenCode Router. Code formatting, test suite execution, and pull request workflows."
+---
+
 # Contributing Guidelines
 
 Thank you for your interest in contributing to **OpenCode Router**! We welcome bug reports, feature requests, documentation improvements, and code contributions.

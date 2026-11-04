@@ -1,3 +1,8 @@
+---
+title: "Getting Started with OpenCode Router"
+description: "Quickstart guide to OpenCode Router. Learn the automated 3-stage health check workflow, proxy rotation, and one-command OpenCode execution."
+---
+
 # Getting Started with OpenCode Router
 
 Welcome to **OpenCode Router**, an intelligent proxy discovery and routing manager designed specifically for [OpenCode](https://github.com/anomaly/opencode) on Linux.

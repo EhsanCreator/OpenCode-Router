@@ -1,3 +1,8 @@
+---
+title: "Troubleshooting Guide"
+description: "Actionable solutions for port conflicts, authentication failures, proxy latency spikes, and zombie process cleanup in OpenCode Router."
+---
+
 # Troubleshooting Guide
 
 This guide provides actionable solutions for common issues encountered when running OpenCode Router.

@@ -1,3 +1,8 @@
+---
+title: "Security Policy"
+description: "Security disclosure policy, supported versions, and vulnerability reporting procedures for OpenCode Router."
+---
+
 # Security Policy
 
 ## Supported Versions

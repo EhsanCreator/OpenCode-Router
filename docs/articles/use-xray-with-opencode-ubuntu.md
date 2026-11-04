@@ -1,3 +1,8 @@
+---
+title: "How to Use Xray with OpenCode on Ubuntu"
+description: "Complete guide to integrating Xray-core with OpenCode on Ubuntu Linux. Generate VLESS Reality client configurations and eliminate DPI throttling."
+---
+
 # How to Use Xray with OpenCode on Ubuntu
 
 [Xray-core](https://github.com/XTLS/Xray-core) is one of the most advanced, high-performance network tunneling and anti-censorship engines available for Linux. When combined with [OpenCode](https://github.com/anomaly/opencode), Xray provides resilient, low-latency connectivity to AI model endpoints across restricted networks. This guide explains how Xray-core integrates with OpenCode on **Ubuntu 24.04 LTS (x86_64)**, details client configuration generation, and showcases how [OpenCode Router](https://github.com/EhsanCreator/OpenCode-Router) manages the entire lifecycle automatically.

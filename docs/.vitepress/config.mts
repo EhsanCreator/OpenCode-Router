@@ -9,6 +9,25 @@ export default defineConfig({
   sitemap: {
     hostname: 'https://ehsancreator.github.io/OpenCode-Router/'
   },
+  transformHead({ pageData }) {
+    const cleanPath = pageData.relativePath
+      .replace(/(^|\/)index\.md$/, '$1')
+      .replace(/\.md$/, '');
+    const canonicalUrl = `https://ehsancreator.github.io/OpenCode-Router/${cleanPath}`.replace(/\/+$/, '/');
+    const head: [string, Record<string, string>][] = [
+      ['link', { rel: 'canonical', href: canonicalUrl }],
+      ['meta', { property: 'og:url', content: canonicalUrl }]
+    ];
+    if (pageData.frontmatter.title) {
+      head.push(['meta', { property: 'og:title', content: `${pageData.frontmatter.title} | OpenCode Router` }]);
+      head.push(['meta', { name: 'twitter:title', content: `${pageData.frontmatter.title} | OpenCode Router` }]);
+    }
+    if (pageData.frontmatter.description) {
+      head.push(['meta', { property: 'og:description', content: pageData.frontmatter.description }]);
+      head.push(['meta', { name: 'twitter:description', content: pageData.frontmatter.description }]);
+    }
+    return head;
+  },
   head: [
     ['link', { rel: 'icon', type: 'image/png', href: '/OpenCode-Router/images/dashboard.png' }],
     ['meta', { name: 'theme-color', content: '#0f172a' }],

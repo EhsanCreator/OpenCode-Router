@@ -1,3 +1,8 @@
+---
+title: "How to Fix OpenCode HTTP 429 Rate Limit Errors"
+description: "Understand HTTP 429 errors in OpenCode. Distinguish IP-based gateway throttling from account quota limits, and configure automated proxy rotation."
+---
+
 # How to Fix OpenCode HTTP 429 Rate Limit Errors
 
 When utilizing [OpenCode](https://github.com/anomaly/opencode) for AI-assisted coding on Linux, encountering an **HTTP 429 Too Many Requests** error is one of the most frustrating interruptions. This technical guide explains the underlying mechanisms of HTTP 429 errors, provides clear diagnostic rules to distinguish **IP-based rate limits** from **account-level quota exhaustion**, and explains how [OpenCode Router](https://github.com/EhsanCreator/OpenCode-Router) intelligently handles automated failover.

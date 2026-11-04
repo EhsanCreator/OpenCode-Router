@@ -1,3 +1,8 @@
+---
+title: "Frequently Asked Questions (FAQ)"
+description: "Answers to common questions about OpenCode Router, rate limits, model token budgets, and system VPN coexistence."
+---
+
 # Frequently Asked Questions (FAQ)
 
 ### What is OpenCode Router?

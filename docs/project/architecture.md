@@ -1,3 +1,8 @@
+---
+title: "System Architecture"
+description: "Technical subsystem overview of OpenCode Router: Express backend, React frontend, SQLite storage, and Xray proxy engine."
+---
+
 # System Architecture
 
 OpenCode Router consists of decoupled backend, frontend, proxy, and launcher subsystems:

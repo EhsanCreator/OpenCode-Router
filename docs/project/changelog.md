@@ -1,3 +1,8 @@
+---
+title: "Changelog"
+description: "Version history and release notes for OpenCode Router v1.0.0, covering multi-protocol support, telemetry, and isolation."
+---
+
 # Changelog
 
 All notable changes to the **OpenCode Router** project are documented in this file.

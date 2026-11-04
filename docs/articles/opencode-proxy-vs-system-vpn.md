@@ -1,3 +1,8 @@
+---
+title: "OpenCode Proxy vs. System-Wide VPN: Understanding the Differences"
+description: "Compare application-specific proxies with system-wide VPNs for AI coding. Learn why process-level isolation prevents broken SSH and local dev servers."
+---
+
 # OpenCode Proxy vs. System-Wide VPN: Understanding the Differences
 
 When developers encounter network restrictions, regional blocks, or API rate limits while using [OpenCode](https://github.com/anomaly/opencode) on Linux, their first instinct is often to turn on a full system-wide VPN client. However, system-wide VPNs frequently introduce serious workflow friction for programmers. 

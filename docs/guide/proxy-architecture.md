@@ -1,3 +1,8 @@
+---
+title: "Proxy Architecture & Traffic Flow"
+description: "In-depth guide to split-tunnel architecture, process-level isolation, and dual SOCKS5/HTTP inbounds in OpenCode Router."
+---
+
 # Proxy Architecture & Traffic Flow
 
 This guide explains how OpenCode Router routes application traffic, isolates processes, and maintains system network stability.
