@@ -2,6 +2,7 @@
 
 <div align="center">
 
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://ehsancreator.github.io/OpenCode-Router/)
 [![Release](https://img.shields.io/badge/release-v1.0.0-emerald.svg)](https://github.com/EhsanCreator/OpenCode-Router/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%20LTS%20(Verified)-orange.svg)]()
@@ -10,11 +11,12 @@
 
 **Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.**
 
+[Documentation Website](https://ehsancreator.github.io/OpenCode-Router/) •
 [Key Features](#5-key-features) •
 [Architecture](#8-architecture-overview) •
 [Installation](#11-installation) •
 [Usage](#13-usage-examples) •
-[Technical Guides](#technical-documentation--articles) •
+[Technical Guides](#21-technical-documentation--articles) •
 [Author](#23-author-and-contact)
 
 </div>

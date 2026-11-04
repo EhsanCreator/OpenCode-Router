@@ -1,11 +1,11 @@
 {
   "name": "opencode-router",
   "version": "1.0.0",
-  "description": "Smart VPN & Connectivity Router for OpenCode on Ubuntu",
+  "description": "Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.",
   "main": "src/backend/server.ts",
   "author": "Ehsan Shahryari <https://github.com/EhsanCreator>",
   "license": "MIT",
-  "homepage": "https://github.com/EhsanCreator/OpenCode-Router#readme",
+  "homepage": "https://ehsancreator.github.io/OpenCode-Router/",
   "repository": {
     "type": "git",
     "url": "https://github.com/EhsanCreator/OpenCode-Router.git"
@@ -19,7 +19,10 @@
     "start": "npx tsx src/backend/server.ts",
     "dev:backend": "npx tsx watch src/backend/server.ts",
     "dev:frontend": "cd src/frontend && npx vite",
-    "test": "npx tsx tests/test-scenarios.ts"
+    "test": "npx tsx tests/test-scenarios.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "opencode",
@@ -56,6 +59,7 @@
     "autoprefixer": "^10.6.2",
     "postcss": "^8.5.32",
     "tailwindcss": "^4.3.4",
-    "vite": "^8.3.5"
+    "vite": "^8.3.5",
+    "vitepress": "^1.6.4"
   }
 }

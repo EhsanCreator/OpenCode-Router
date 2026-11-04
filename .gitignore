@@ -5,6 +5,9 @@ node_modules/
 # Build Outputs
 dist/
 src/frontend/dist/
+/.vitepress/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 
 # Data and SQLite Runtime Storage
 data/*
