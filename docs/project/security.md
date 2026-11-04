@@ -21,7 +21,7 @@ The OpenCode Router project takes security and data confidentiality seriously. I
 Please **DO NOT** report security vulnerabilities via public GitHub issues.
 
 Instead, please send a private report to:
-- **Author**: Ehsan Shahryari
+- **Author**: Ehsan Shahriyari
 - **GitHub**: [@EhsanCreator](https://github.com/EhsanCreator)
 - **Repository Issues (Security Category)**: Private security advisory channel on GitHub
 

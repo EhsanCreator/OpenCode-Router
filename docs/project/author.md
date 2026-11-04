@@ -1,13 +1,13 @@
 ---
 title: "Author & Credits"
-description: "Creator and lead maintainer profile for Ehsan Shahryari (@EhsanCreator), author of OpenCode Router."
+description: "Creator and lead maintainer profile for Ehsan Shahriyari (@EhsanCreator), author of OpenCode Router."
 ---
 
 # Author & Credits
 
 **OpenCode Router** was created and engineered by:
 
-## Ehsan Shahryari
+## Ehsan Shahriyari
 
 - **GitHub**: [@EhsanCreator](https://github.com/EhsanCreator)
 - **Profile**: [https://github.com/EhsanCreator](https://github.com/EhsanCreator)

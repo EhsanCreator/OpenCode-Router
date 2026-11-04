@@ -2,7 +2,7 @@
 
 **Project**: OpenCode Router  
 **Repository**: [https://github.com/EhsanCreator/OpenCode-Router](https://github.com/EhsanCreator/OpenCode-Router)  
-**Author**: Ehsan Shahryari ([@EhsanCreator](https://github.com/EhsanCreator))  
+**Author**: Ehsan Shahriyari ([@EhsanCreator](https://github.com/EhsanCreator))  
 **Target Release**: v1.0.0  
 **Verified Platform**: Ubuntu 24.04 LTS (64-bit x86_64)  
 
@@ -73,7 +73,7 @@ When configuring the repository via GitHub's Web UI (or GitHub CLI `gh repo edit
   - [x] Packages
   - [x] Environments
 - **Social Preview Image**:
-  - Image file: A 1280x640px PNG banner based on `docs/images/dashboard.png` with a clean dark-slate gradient frame, project title ("OpenCode Router v1.0.0"), subtitle ("Automated Proxy Discovery & Rate-Limit Router for OpenCode"), and author badge ("by Ehsan Shahryari").
+  - Image file: A 1280x640px PNG banner based on `docs/images/dashboard.png` with a clean dark-slate gradient frame, project title ("OpenCode Router v1.0.0"), subtitle ("Automated Proxy Discovery & Rate-Limit Router for OpenCode"), and author badge ("by Ehsan Shahriyari").
   - Aspect ratio: 2:1 (standard Open Graph / GitHub social card specification).
 
 ---
@@ -117,5 +117,5 @@ npm install
 ```
 
 **Full Documentation & Troubleshooting**: [README.md](https://github.com/EhsanCreator/OpenCode-Router#readme)  
-**Author**: Ehsan Shahryari ([@EhsanCreator](https://github.com/EhsanCreator))
+**Author**: Ehsan Shahriyari ([@EhsanCreator](https://github.com/EhsanCreator))
 ```

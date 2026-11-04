@@ -264,7 +264,7 @@ export const App: React.FC = () => {
           </div>
           <div className="flex items-center gap-1.5 text-slate-400">
             <span>Created by</span>
-            <span className="font-semibold text-slate-200">Ehsan Shahryari</span>
+            <span className="font-semibold text-slate-200">Ehsan Shahriyari</span>
             <span>&bull;</span>
             <a
               href="https://github.com/EhsanCreator"

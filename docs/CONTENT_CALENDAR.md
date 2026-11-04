@@ -2,7 +2,7 @@
 
 **Repository**: [https://github.com/EhsanCreator/OpenCode-Router](https://github.com/EhsanCreator/OpenCode-Router)  
 **Documentation Site**: [https://ehsancreator.github.io/OpenCode-Router/](https://ehsancreator.github.io/OpenCode-Router/)  
-**Author**: Ehsan Shahryari ([@EhsanCreator](https://github.com/EhsanCreator))  
+**Author**: Ehsan Shahriyari ([@EhsanCreator](https://github.com/EhsanCreator))  
 
 ---
 

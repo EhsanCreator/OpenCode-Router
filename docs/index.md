@@ -63,4 +63,4 @@ npm install
 
 ## Community & Author
 
-OpenCode Router is created and maintained by **Ehsan Shahryari** ([@EhsanCreator](https://github.com/EhsanCreator)) and distributed under the [MIT License](https://github.com/EhsanCreator/OpenCode-Router/blob/main/LICENSE).
+OpenCode Router is created and maintained by **Ehsan Shahriyari** ([@EhsanCreator](https://github.com/EhsanCreator)) and distributed under the [MIT License](https://github.com/EhsanCreator/OpenCode-Router/blob/main/LICENSE).

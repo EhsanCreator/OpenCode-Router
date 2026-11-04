@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.",
   "main": "src/backend/server.ts",
-  "author": "Ehsan Shahryari <https://github.com/EhsanCreator>",
+  "author": "Ehsan Shahriyari <https://github.com/EhsanCreator>",
   "license": "MIT",
   "homepage": "https://ehsancreator.github.io/OpenCode-Router/",
   "repository": {

@@ -41,7 +41,7 @@ export default defineConfig({
   head: [
     ['meta', { name: 'google-site-verification', content: 'CFmINnfAKd8ec6O0o44UeGgXtt4n6DXwTPft1gg1mmQ' }],
     ['meta', { name: 'theme-color', content: '#0f172a' }],
-    ['meta', { name: 'author', content: 'Ehsan Shahryari' }],
+    ['meta', { name: 'author', content: 'Ehsan Shahriyari' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'OpenCode Router' }],
     ['meta', { property: 'og:title', content: 'OpenCode Router — Intelligent Proxy & Rate-Limit Router for OpenCode' }],
@@ -68,7 +68,7 @@ export default defineConfig({
         description: 'Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.',
         author: {
           '@type': 'Person',
-          name: 'Ehsan Shahryari',
+          name: 'Ehsan Shahriyari',
           url: 'https://github.com/EhsanCreator'
         },
         url: 'https://ehsancreator.github.io/OpenCode-Router/',
@@ -136,7 +136,7 @@ export default defineConfig({
     },
     footer: {
       message: 'Released under the MIT License • Fully Isolated User-Space Proxy for Ubuntu Linux',
-      copyright: 'Copyright © 2026 Ehsan Shahryari • @EhsanCreator'
+      copyright: 'Copyright © 2026 Ehsan Shahriyari • @EhsanCreator'
     }
   }
 });

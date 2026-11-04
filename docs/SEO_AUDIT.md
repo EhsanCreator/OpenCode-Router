@@ -2,7 +2,7 @@
 
 **Project**: OpenCode Router  
 **Repository**: [https://github.com/EhsanCreator/OpenCode-Router](https://github.com/EhsanCreator/OpenCode-Router)  
-**Author**: Ehsan Shahryari ([@EhsanCreator](https://github.com/EhsanCreator))  
+**Author**: Ehsan Shahriyari ([@EhsanCreator](https://github.com/EhsanCreator))  
 **Release Target**: v1.0.0  
 **Verified Platform**: Ubuntu 24.04 LTS (64-bit x86_64)  
 **Date of Audit**: November 2026  
