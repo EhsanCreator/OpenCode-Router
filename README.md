@@ -39,16 +39,9 @@ OpenCode Router combines an unprivileged headless Xray-core engine with an Expre
 
 ---
 
-## 4. Application Screenshots
+## 4. Product Preview
 
-### Real-Time Telemetry Dashboard
-![OpenCode Router web dashboard showing active isolated proxy node, verified latency, and OpenCode target status](docs/images/dashboard.png)
-
-### Multi-Protocol Configuration Manager
-![OpenCode Router configuration table displaying parsed VLESS, VMess, Trojan, and Shadowsocks nodes with real-time latency](docs/images/configuration-manager.png)
-
-### OpenCode Integration & Diagnostics
-![OpenCode Router integration modal displaying OpenCode target runtime, launcher command, and recent prompt verification history](docs/images/connection-status.png)
+UI screenshots will be published after a reproducible, fully synthetic demo dataset is available. Until then, see the [user guide](https://ehsancreator.github.io/OpenCode-Router/guide/getting-started) for the current workflow.
 
 ---
 

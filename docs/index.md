@@ -5,9 +5,6 @@ hero:
   name: "OpenCode Router"
   text: "Intelligent Proxy & Rate-Limit Router for OpenCode"
   tagline: "Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux."
-  image:
-    src: /images/dashboard.png
-    alt: OpenCode Router Web Dashboard
   actions:
     - theme: brand
       text: Get Started
@@ -46,16 +43,9 @@ features:
 **Ubuntu 24.04 LTS (64-bit x86_64)** is the primary development and officially verified platform for OpenCode Router. All unit tests, process isolation, and CLI wrappers are confirmed functional.
 :::
 
-## Real Application Screenshots
+## Product Preview
 
-### Telemetry Dashboard
-![OpenCode Router web dashboard showing active isolated proxy node, verified latency, and OpenCode target status](/images/dashboard.png)
-
-### Multi-Protocol Configuration Manager
-![OpenCode Router configuration table displaying parsed VLESS, VMess, Trojan, and Shadowsocks nodes with real-time latency](/images/configuration-manager.png)
-
-### Integration Diagnostics
-![OpenCode Router integration modal displaying OpenCode target runtime, launcher command, and recent prompt verification history](/images/connection-status.png)
+UI screenshots will be added after the project provides a reproducible synthetic demo dataset.
 
 ## Quick Installation
 

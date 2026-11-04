@@ -39,19 +39,16 @@ export default defineConfig({
     return head;
   },
   head: [
-    ['link', { rel: 'icon', type: 'image/png', href: '/OpenCode-Router/images/dashboard.png' }],
     ['meta', { name: 'theme-color', content: '#0f172a' }],
     ['meta', { name: 'author', content: 'Ehsan Shahryari' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'OpenCode Router' }],
     ['meta', { property: 'og:title', content: 'OpenCode Router — Intelligent Proxy & Rate-Limit Router for OpenCode' }],
     ['meta', { property: 'og:description', content: 'Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.' }],
-    ['meta', { property: 'og:image', content: 'https://ehsancreator.github.io/OpenCode-Router/images/dashboard.png' }],
     ['meta', { property: 'og:url', content: 'https://ehsancreator.github.io/OpenCode-Router/' }],
-    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
     ['meta', { name: 'twitter:title', content: 'OpenCode Router — Intelligent Proxy Router for OpenCode' }],
     ['meta', { name: 'twitter:description', content: 'Fix OpenCode connectivity issues and IP-based HTTP 429 rate limits with automated Xray/V2Ray proxy routing on Ubuntu Linux.' }],
-    ['meta', { name: 'twitter:image', content: 'https://ehsancreator.github.io/OpenCode-Router/images/dashboard.png' }],
     ['meta', { name: 'twitter:creator', content: '@EhsanCreator' }],
     [
       'script',
