@@ -4,6 +4,7 @@ import fs from 'fs';
 import net from 'net';
 import { db, getSetting } from '../db/database';
 import { XrayConfigBuilder } from './xray-config-builder';
+import { safeWriteSensitiveFile, ensureSecureDirectory } from '../security/file-guard';
 
 export interface ActiveConfigInfo {
   id: number;
@@ -40,9 +41,7 @@ export class VpnEngine {
     }
 
     const dataDir = path.join(projectRoot, 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
+    ensureSecureDirectory(dataDir);
     this.configFilePath = path.join(dataDir, 'active-xray-config.json');
     this.stateFilePath = path.join(dataDir, 'active-connection.json');
 
@@ -135,10 +134,13 @@ export class VpnEngine {
       httpPort
     );
 
-    fs.writeFileSync(this.configFilePath, JSON.stringify(xrayConfig, null, 2), 'utf-8');
+    safeWriteSensitiveFile(this.configFilePath, JSON.stringify(xrayConfig, null, 2));
 
     const logFile = path.join(path.dirname(this.configFilePath), 'xray.log');
-    const logFd = fs.openSync(logFile, 'a');
+    const logFd = fs.openSync(logFile, 'a', 0o600);
+    try {
+      fs.fchmodSync(logFd, 0o600);
+    } catch {}
 
     return new Promise<boolean>((resolve) => {
       const child = spawn(this.binPath, ['run', '-c', this.configFilePath], {
@@ -288,7 +290,7 @@ export class VpnEngine {
       config: this.currentConfig
     };
     try {
-      fs.writeFileSync(this.stateFilePath, JSON.stringify(state, null, 2), 'utf-8');
+      safeWriteSensitiveFile(this.stateFilePath, JSON.stringify(state, null, 2));
       db.prepare(`
         INSERT INTO active_connection (id, config_id, pid, egress_ip, latency_ms, reason, connected_at)
         VALUES (1, ?, ?, ?, ?, ?, ?)

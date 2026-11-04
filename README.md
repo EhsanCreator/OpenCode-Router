@@ -235,11 +235,15 @@ Traffic flow:
 
 ## 15. Security and Privacy
 
+- **Default Loopback Binding**: The management server binds strictly to `127.0.0.1` by default. Remote exposure requires explicit opt-in (`ALLOW_REMOTE_ACCESS=true`) and triggers high-visibility console warnings.
+- **Mandatory Remote Authentication**: Remote binding strictly requires setting `OPENCODE_ROUTER_API_KEY`. The server will refuse startup if remote binding is attempted without an API key. Remote requests require `Authorization: Bearer <key>` using constant-time verification (`crypto.timingSafeEqual`). API keys in query parameters are strictly rejected.
+- **Frictionless Local Execution**: Standard local loopback usage (`127.0.0.1`) requires zero authentication by default, keeping CLI and local dashboard workflows completely frictionless.
+- **Strict Origin & Host Guard**: Replaces unrestricted CORS with an explicit local development allowlist. Blocks DNS rebinding via Host header checks and blocks cross-origin CSRF on state-changing endpoints (`POST`, `DELETE`) with `HTTP 403 Forbidden`.
+- **Sensitive Token & Credential Redaction**: Subscription URLs returned by `/api/sources` and error reports automatically redact private parameters case-insensitively (`token`, `key`, `password`, `auth`, `api_key`, `access_token`) and sanitize userinfo credentials (`***:***@host`). Diagnostics endpoints mask personal IPv4 and IPv6 octets.
+- **Restricted File Permissions & Symlink Protection**: Generated Xray client configs (`data/active-xray-config.json`), active state files, and logs are written with mode `0600` (user-only read/write), data directories are enforced to `0700`, and writing through symbolic links is blocked (`lstat` and `O_NOFOLLOW`).
 - **User-Space Isolation**: No modification of `/etc/resolv.conf`, `iptables`, `nftables`, or kernel routing tables.
-- **Zero Root Privileges**: Runs entirely as a standard unprivileged user on high ports (`>1024`).
-- **Zero Data Leakage**: Node credentials, subscription tokens, and SQLite database records are stored exclusively in `data/` and excluded from Git tracking via `.gitignore`.
+- **Zero Root Privileges**: Runs entirely as a standard unprivileged user on high loopback ports (`127.0.0.1:10808` / `10809`).
 - **Zero External Telemetry**: No tracking scripts, analytics, or external telemetry are collected or transmitted.
-- **Sanitized Diagnostics**: Diagnostic endpoints and logs automatically mask personal IP octets.
 
 ---
 

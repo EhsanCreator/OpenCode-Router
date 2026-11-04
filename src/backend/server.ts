@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -10,11 +9,35 @@ import { ConnectionOrchestrator } from './orchestrator/connection-orchestrator';
 import { ConfigFetcher } from './discovery/config-fetcher';
 import { LatencyTester } from './tester/latency-tester';
 import { PrivilegeWizard } from './security/privilege-wizard';
+import {
+  createCorsMiddleware,
+  createSecurityGuardMiddleware,
+  createAuthMiddleware,
+  resolveBindHost,
+  validateRemoteBindingConfig,
+  setActiveBindHost,
+  DEFAULT_BIND_HOST,
+  maskAddress,
+  sanitizeSubscriptionUrl
+} from './security/api-guard';
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const { host: INITIAL_BIND_HOST, warning: hostWarning } = resolveBindHost();
+if (hostWarning) {
+  console.warn(hostWarning);
+}
+setActiveBindHost(INITIAL_BIND_HOST);
 
-app.use(cors());
+// Security Hardening: Restricted CORS with development-only origin allowlist
+app.use(createCorsMiddleware(PORT, INITIAL_BIND_HOST));
+
+// Security Hardening: Guard middleware for Host header validation and CSRF protection
+app.use(createSecurityGuardMiddleware(PORT, INITIAL_BIND_HOST));
+
+// Security Hardening: Mandatory Bearer token authentication for remote access
+app.use(createAuthMiddleware());
+
 app.use(express.json({ limit: '10mb' }));
 
 // Initialize SQLite database
@@ -262,10 +285,14 @@ app.post('/api/configs/import', (req: Request, res: Response) => {
   res.json({ success: true, ...result });
 });
 
-// Get GitHub Sources
+// Get GitHub Sources (with sensitive query tokens redacted)
 app.get('/api/sources', (req: Request, res: Response) => {
-  const sources = db.prepare('SELECT * FROM sources ORDER BY id ASC').all();
-  res.json({ sources });
+  const sources = db.prepare('SELECT * FROM sources ORDER BY id ASC').all() as any[];
+  const sanitizedSources = sources.map((s) => ({
+    ...s,
+    url: sanitizeSubscriptionUrl(s.url)
+  }));
+  res.json({ sources: sanitizedSources });
 });
 
 // Add Source
@@ -329,9 +356,7 @@ app.get('/api/diagnostics', (req: Request, res: Response) => {
 
   const sanitizedHistory = history.map((item) => ({
     ...item,
-    address: item.address && item.address.includes('.')
-      ? item.address.split('.').slice(0, 2).concat(['*.*']).join('.')
-      : item.address
+    address: maskAddress(item.address)
   }));
 
   res.json({
@@ -351,9 +376,17 @@ if (fs.existsSync(frontendDist)) {
   });
 }
 
-export function startServer(port: number = PORT) {
-  return app.listen(port, () => {
-    console.log(`[OpenCode VPN Manager] Backend server running on http://localhost:${port}`);
+export function startServer(port: number = PORT, host?: string) {
+  const { host: bindHost, warning } = resolveBindHost(host);
+  if (warning) {
+    console.warn(warning);
+  }
+  // Validate that remote binding is protected by an API key
+  validateRemoteBindingConfig(bindHost, process.env.OPENCODE_ROUTER_API_KEY);
+  setActiveBindHost(bindHost);
+
+  return app.listen(port, bindHost, () => {
+    console.log(`[OpenCode Router] Backend server running on http://${bindHost}:${port}`);
   });
 }
 

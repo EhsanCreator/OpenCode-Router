@@ -1,5 +1,6 @@
 import { db } from '../db/database';
 import { ConfigParser, ParsedConfig } from '../parser/config-parser';
+import { sanitizeSubscriptionUrl } from '../security/api-guard';
 
 export interface SourceRow {
   id: number;
@@ -157,7 +158,8 @@ export class ConfigFetcher {
       summary.duplicates = duplicates;
       summary.invalid = invalid;
     } catch (err: any) {
-      summary.error = err.message || 'Unknown fetch error';
+      const rawError = err?.message || 'Unknown fetch error';
+      summary.error = sanitizeSubscriptionUrl(rawError);
       db.prepare(`
         UPDATE sources SET
           last_fetched_at = datetime('now'),

@@ -12,6 +12,7 @@ import { ErrorClassifier } from '../src/backend/opencode/error-classifier';
 import { OpenCodeService } from '../src/backend/opencode/opencode-service';
 import { CandidateRanker } from '../src/backend/tester/candidate-ranker';
 import { ConfigFetcher } from '../src/backend/discovery/config-fetcher';
+import { runSecurityTests } from './security-tests';
 
 async function runTestSuite() {
   console.log('====================================================');
@@ -224,6 +225,10 @@ async function runTestSuite() {
     console.log('  ✔ Scenario A: Working connection successfully verified and locked.');
     console.log('  ✔ Scenario G: Repeat execution cleanly re-uses test history and candidate scores.\n');
   }
+
+  // Test 9: Security Hardening & Exposure Verification
+  console.log('▶ Test 9: Security Hardening, Origin/Host Guards & Host Binding Verification');
+  await runSecurityTests();
 
   console.log('====================================================');
   console.log('🎉 ALL ACCEPTANCE SCENARIOS (A - G) PASSED SUCCESSFULLY!');

@@ -4,11 +4,19 @@ import fs from 'fs';
 
 const DB_DIR = path.resolve(__dirname, '../../../data');
 if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
+  fs.mkdirSync(DB_DIR, { recursive: true, mode: 0o700 });
 }
+try {
+  fs.chmodSync(DB_DIR, 0o700);
+} catch {}
 
 const DB_PATH = path.join(DB_DIR, 'opencode-vpn.db');
 export const db = new Database(DB_PATH);
+try {
+  if (fs.existsSync(DB_PATH)) {
+    fs.chmodSync(DB_PATH, 0o600);
+  }
+} catch {}
 
 // Enable WAL mode for high concurrency
 db.pragma('journal_mode = WAL');

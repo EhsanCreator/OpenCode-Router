@@ -40,7 +40,21 @@ OpenCode Router intentionally avoids modifying global network configuration:
 
 ---
 
-## 4. Optional Least-Privilege Network Capabilities
+## 4. Local API Hardening & Remote Access Protection
+
+The Express management backend incorporates comprehensive defensive protections:
+- **Default Loopback Binding**: Binds strictly to `127.0.0.1` by default. Non-loopback network exposure requires explicit opt-in (`ALLOW_REMOTE_ACCESS=true`).
+- **Mandatory Remote Authentication**: Binding to a non-loopback interface strictly requires setting `OPENCODE_ROUTER_API_KEY`. The server will refuse startup if remote binding is configured without an API key. Remote requests require the `Authorization: Bearer <key>` header, compared using constant-time algorithms (`crypto.timingSafeEqual`). API keys are never accepted in query parameters.
+- **Frictionless Local Execution**: Standard local loopback usage (`127.0.0.1`) requires no API key by default, maintaining zero friction for local CLI and dashboard workflows.
+- **Restricted CORS Policy**: Unrestricted CORS is eliminated. Only local development origins (`localhost:5173`, `127.0.0.1:5173`, `localhost:3000`, `127.0.0.1:3000`) are authorized.
+- **Host Header Validation**: Rejects requests targeting external hostnames or DNS rebinding domains with `HTTP 403 Forbidden`.
+- **CSRF & State-Changing Guard**: Validates `Origin` and `Referer` headers on all state-changing endpoints (`POST`, `DELETE`), preventing malicious websites from triggering actions via a user's browser.
+- **Sensitive Token Redaction**: Sources endpoints and error reports automatically redact private query tokens case-insensitively (`token`, `key`, `secret`, `password`, `auth`, `api_key`, `access_token`) and sanitize user credentials in URLs (`***:***@host`).
+- **Restricted File Permissions & Symlink Defense**: Active Xray configuration files, logs, and connection states are saved with user-only permissions (`0600`), and parent data directories are enforced to `0700`. Overwrites explicitly correct pre-existing permissive permissions, and writing through symbolic links is blocked (`lstat` and `O_NOFOLLOW`).
+
+---
+
+## 5. Optional Least-Privilege Network Capabilities
 
 If raw packet routing or custom network binding is desired on headless Ubuntu servers, `scripts/setup-privileges.sh` applies the Linux capability model:
 ```bash
