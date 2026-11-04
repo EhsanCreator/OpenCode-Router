@@ -43,6 +43,9 @@ export class CandidateRanker {
     const scored: RankedConfigRow[] = rows.map((r) => {
       let score = 100;
 
+      // Bonus for currently verified working status
+      if (r.last_status === 'working') score += 50;
+
       // Bonus for past success
       score += r.success_count * 50;
 

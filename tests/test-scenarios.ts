@@ -205,9 +205,9 @@ async function runTestSuite() {
 
     // Simulate Scenario A: Store as working connection
     db.prepare(`
-      INSERT INTO configs (protocol, address, port, remark, security, network, raw_url, config_hash, last_status, last_latency_ms)
-      VALUES ('vless', '127.0.0.1', ?, 'Mock_Working_Scenario_A', 'tls', 'tcp', 'vless://test', 'mock-hash-1', 'working', ?)
-      ON CONFLICT(config_hash) DO UPDATE SET last_status = 'working', last_latency_ms = excluded.last_latency_ms
+      INSERT INTO configs (protocol, address, port, remark, security, network, raw_url, config_hash, last_status, last_latency_ms, consecutive_failures, success_count)
+      VALUES ('vless', '127.0.0.1', ?, 'Mock_Working_Scenario_A', 'tls', 'tcp', 'vless://test', 'mock-hash-1', 'working', ?, 0, 1)
+      ON CONFLICT(config_hash) DO UPDATE SET last_status = 'working', last_latency_ms = excluded.last_latency_ms, consecutive_failures = 0, success_count = success_count + 1
     `).run(mockProxyPort, probe.latencyMs);
 
     const workingRow = db.prepare('SELECT * FROM configs WHERE config_hash = ?').get('mock-hash-1') as any;
