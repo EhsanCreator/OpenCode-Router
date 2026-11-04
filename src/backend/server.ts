@@ -218,6 +218,32 @@ app.post('/api/configs/test-single', async (req: Request, res: Response) => {
   });
 });
 
+// Manually activate a configuration
+app.post('/api/configs/:id/activate', async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  const row = db.prepare('SELECT * FROM configs WHERE id = ?').get(id) as any;
+  if (!row) {
+    return res.status(404).json({ error: 'Configuration not found' });
+  }
+
+  const httpPort = parseInt(getSetting('http_port', '10809'), 10);
+  const socksPort = parseInt(getSetting('socks_port', '10808'), 10);
+
+  const started = await vpn.start(row, socksPort, httpPort);
+  if (!started) {
+    return res.status(500).json({ error: 'Failed to start proxy engine' });
+  }
+
+  db.prepare('UPDATE configs SET is_active = 0').run();
+  db.prepare('UPDATE configs SET is_active = 1 WHERE id = ?').run(id);
+
+  res.json({
+    success: true,
+    message: `Activated ${row.remark || row.address}`,
+    active: vpn.getActiveConfig()
+  });
+});
+
 // Delete a configuration
 app.delete('/api/configs/:id', (req: Request, res: Response) => {
   const id = parseInt(req.params.id, 10);
