@@ -39,6 +39,7 @@ export default defineConfig({
     return head;
   },
   head: [
+    ['meta', { name: 'google-site-verification', content: 'CFmINnfAKd8ec6O0o44UeGgXtt4n6DXwTPft1gg1mmQ' }],
     ['meta', { name: 'theme-color', content: '#0f172a' }],
     ['meta', { name: 'author', content: 'Ehsan Shahryari' }],
     ['meta', { property: 'og:type', content: 'website' }],
