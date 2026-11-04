@@ -3,7 +3,7 @@
 <div align="center">
 
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://ehsancreator.github.io/OpenCode-Router/)
-[![Release](https://img.shields.io/badge/release-v1.0.0-emerald.svg)](https://github.com/EhsanCreator/OpenCode-Router/releases)
+[![Version](https://img.shields.io/badge/version-v1.0.0-emerald.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%20LTS%20(Verified)-orange.svg)]()
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)]()
