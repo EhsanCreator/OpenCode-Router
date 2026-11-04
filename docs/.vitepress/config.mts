@@ -6,6 +6,16 @@ export default defineConfig({
   base: '/OpenCode-Router/',
   cleanUrls: true,
   lastUpdated: true,
+  // Keep internal SEO planning documents out of the public documentation site and sitemap.
+  srcExclude: [
+    '**/BACKLINK_TRACKER.md',
+    '**/CONTENT_CALENDAR.md',
+    '**/GITHUB_SEO.md',
+    '**/KEYWORD_RESEARCH.md',
+    '**/PROMOTION_PLAN.md',
+    '**/SEO_AUDIT.md',
+    '**/SEO_MONITORING.md'
+  ],
   sitemap: {
     hostname: 'https://ehsancreator.github.io/OpenCode-Router/'
   },
