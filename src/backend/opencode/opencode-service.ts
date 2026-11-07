@@ -97,6 +97,8 @@ export HTTP_PROXY="http://127.0.0.1:\${HTTP_PORT}"
 export HTTPS_PROXY="http://127.0.0.1:\${HTTP_PORT}"
 export all_proxy="socks5://127.0.0.1:\${SOCKS_PORT}"
 export ALL_PROXY="socks5://127.0.0.1:\${SOCKS_PORT}"
+export no_proxy="localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12"
+export NO_PROXY="localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12"
 
 OPENCODE_BIN="${this.binaryPath}"
 if [ ! -x "\$OPENCODE_BIN" ]; then
@@ -141,7 +143,9 @@ exec "\$OPENCODE_BIN" "\$@"
       HTTP_PROXY: `http://127.0.0.1:${httpPort}`,
       HTTPS_PROXY: `http://127.0.0.1:${httpPort}`,
       all_proxy: `socks5://127.0.0.1:${socksPort}`,
-      ALL_PROXY: `socks5://127.0.0.1:${socksPort}`
+      ALL_PROXY: `socks5://127.0.0.1:${socksPort}`,
+      no_proxy: 'localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12',
+      NO_PROXY: 'localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12'
     };
 
     return new Promise<ClassificationResult>((resolve) => {

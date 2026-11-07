@@ -233,7 +233,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-white text-base">{activeConn.remark}</span>
                 <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   {activeConn.protocol}
@@ -241,9 +241,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span className="px-2 py-0.5 rounded text-xs font-mono bg-slate-800 text-slate-300">
                   {activeConn.address}:{activeConn.port}
                 </span>
+                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Active Locked
+                </span>
               </div>
               <p className="text-xs text-emerald-400/90 font-medium">
-                {activeConn.reason || 'Verified working with OpenCode'}
+                {activeConn.reason || 'Active Connection'}
               </p>
               <p className="text-xs text-slate-400">
                 Connected at: {new Date(activeConn.connected_at).toLocaleTimeString()}
@@ -253,7 +256,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className="text-xs text-slate-400">Verified Latency</div>
+              <div className="text-xs text-slate-400">
+                {activeConn.latency_ms ? 'Verified Latency' : 'Connection Status'}
+              </div>
               <div className="text-lg font-bold font-mono text-emerald-400">
                 {activeConn.latency_ms ? `${activeConn.latency_ms} ms` : 'Active'}
               </div>

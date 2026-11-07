@@ -9,7 +9,7 @@ export interface LiveCandidateLog {
   remark: string;
   security: string;
   latencyMs?: number;
-  status: 'testing' | 'working' | 'failed' | 'rate_limited';
+  status: 'testing' | 'working' | 'failed' | 'rate_limited' | 'auth_error';
   error?: string;
   timestamp: string;
 }
@@ -18,9 +18,10 @@ interface TestingLiveFeedProps {
   logs: LiveCandidateLog[];
   isTesting: boolean;
   currentMessage: string;
+  activeConnectionId?: number;
 }
 
-export const TestingLiveFeed: React.FC<TestingLiveFeedProps> = ({ logs, isTesting, currentMessage }) => {
+export const TestingLiveFeed: React.FC<TestingLiveFeedProps> = ({ logs, isTesting, currentMessage, activeConnectionId }) => {
   if (logs.length === 0 && !isTesting) {
     return null;
   }
@@ -93,30 +94,49 @@ export const TestingLiveFeed: React.FC<TestingLiveFeedProps> = ({ logs, isTestin
                   )}
                 </td>
                 <td className="py-3 px-4 font-sans">
-                  {item.status === 'testing' && (
-                    <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold">
-                      <RefreshCw className="w-3 h-3 animate-spin" />
-                      Testing OpenCode
-                    </span>
-                  )}
-                  {item.status === 'working' && (
-                    <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      CONNECTION_OK (Working)
-                    </span>
-                  )}
-                  {item.status === 'failed' && (
-                    <span className="inline-flex items-center gap-1.5 text-rose-400" title={item.error}>
-                      <XCircle className="w-3.5 h-3.5" />
-                      {item.error || 'Failed'}
-                    </span>
-                  )}
-                  {item.status === 'rate_limited' && (
-                    <span className="inline-flex items-center gap-1.5 text-orange-400" title={item.error}>
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      Rate Limited (Rotating IP)
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {item.status === 'testing' && (
+                      <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        Testing Proxy & OpenCode
+                      </span>
+                    )}
+                    {item.status === 'working' && (
+                      <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        CONNECTION_OK (Fully Verified)
+                      </span>
+                    )}
+                    {item.status === 'rate_limited' && (
+                      <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold" title={item.error}>
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {item.error && (item.error.toLowerCase().includes('quota') || item.error.toLowerCase().includes('plan') || item.error.toLowerCase().includes('billing'))
+                          ? 'Tunnel Active (Account Quota Reached)'
+                          : 'Rate Limited (Rotating IP)'}
+                      </span>
+                    )}
+                    {item.status === 'auth_error' && (
+                      <span className="inline-flex items-center gap-1.5 text-amber-400 font-semibold" title={item.error}>
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        Tunnel Active (OpenCode Auth Required)
+                      </span>
+                    )}
+                    {item.status === 'failed' && (
+                      <span className="inline-flex items-center gap-1.5 text-rose-400 font-semibold" title={item.error}>
+                        <XCircle className="w-3.5 h-3.5" />
+                        {item.error?.toLowerCase().includes('tcp')
+                          ? 'TCP Handshake Failed'
+                          : item.error?.toLowerCase().includes('proxy') || item.error?.toLowerCase().includes('tunnel') || item.error?.toLowerCase().includes('timed out') || item.error?.toLowerCase().includes('timeout')
+                          ? 'Proxy Tunnel Failed'
+                          : (item.error || 'Failed')}
+                      </span>
+                    )}
+                    {activeConnectionId === item.id && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Active Locked
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="py-3 px-4 text-slate-500 text-[11px]">
                   {item.timestamp}

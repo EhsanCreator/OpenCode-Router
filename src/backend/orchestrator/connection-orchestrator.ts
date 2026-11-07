@@ -18,7 +18,7 @@ export interface WorkflowProgressEvent {
     remark: string;
     security: string;
     latencyMs?: number;
-    status: 'testing' | 'working' | 'failed' | 'rate_limited';
+    status: 'testing' | 'working' | 'failed' | 'rate_limited' | 'auth_error';
     error?: string;
   };
   stats: {
@@ -161,9 +161,9 @@ export class ConnectionOrchestrator extends EventEmitter {
 
         if (this.isCancelled) break;
 
-        // Stage 2: Start local proxy with candidate
+        // Stage 2: Start local proxy with candidate in testing mode (does not prematurely lock active connection)
         this.emitProgress('testing', `Starting VPN proxy engine for ${candidate.remark}...`);
-        const started = await vpn.start(candidate, socksPort, httpPort);
+        const started = await vpn.start(candidate, socksPort, httpPort, true);
         if (!started) {
           this.recordCandidateResult(candidate.id, -1, 0, 0, 'ENGINE_START_FAILED', 'Proxy port failed to bind');
           continue;
@@ -214,17 +214,17 @@ export class ConnectionOrchestrator extends EventEmitter {
         const opencodeResult: ClassificationResult = await opencode.testOpenCodeConnection(httpPort, socksPort, opencodeTimeout);
 
         if (opencodeResult.category === 'SUCCESS') {
-          // Success! Keep connection active and finish!
+          // Success! Lock working connection as active and finish!
           this.recordCandidateResult(candidate.id, proxyTest.latencyMs, 1, 1, 'SUCCESS', 'OpenCode session confirmed');
 
-          db.prepare('UPDATE configs SET is_active = 1, success_count = success_count + 1, last_status = "working", consecutive_failures = 0 WHERE id = ?').run(candidate.id);
+          db.prepare(`UPDATE configs SET is_active = 1, success_count = success_count + 1, last_status = 'working', consecutive_failures = 0 WHERE id = ?`).run(candidate.id);
 
-          const activeInfo = vpn.getActiveConfig();
-          if (activeInfo) {
-            activeInfo.latency_ms = proxyTest.latencyMs;
-            activeInfo.egress_ip = proxyTest.egressIp;
-            activeInfo.reason = `Verified working with OpenCode (${proxyTest.latencyMs}ms latency)`;
-          }
+          vpn.lockActiveConfig(
+            candidate,
+            proxyTest.latencyMs,
+            proxyTest.egressIp,
+            `Verified working with OpenCode (${proxyTest.latencyMs}ms latency)`
+          );
 
           this.emitProgress('success', `Found working connection! OpenCode verified through ${candidate.remark}.`, {
             id: candidate.id,
@@ -240,28 +240,79 @@ export class ConnectionOrchestrator extends EventEmitter {
           this.cleanupAndFinish('success', `Working connection activated: ${candidate.remark}`);
           return true;
         } else if (opencodeResult.category === 'RATE_LIMIT') {
-          this.recordCandidateResult(candidate.id, proxyTest.latencyMs, 1, 0, 'RATE_LIMIT', opencodeResult.userMessage);
-
           if (!opencodeResult.isRecoverableBySwitchingVpn) {
-            // Account-level rate limit: stop unnecessary rotation
-            await vpn.stop();
-            this.emitProgress('rate_limited', opencodeResult.userMessage);
-            this.cleanupAndFinish('rate_limited', opencodeResult.userMessage);
+            // Account-level quota limit: stop unnecessary rotation.
+            // The proxy tunnel itself is verified and active! Lock it in so the user can use it once quota/key is resolved.
+            this.recordCandidateResult(candidate.id, proxyTest.latencyMs, 1, 0, 'ACCOUNT_QUOTA', opencodeResult.userMessage);
+
+            db.prepare(`UPDATE configs SET is_active = 1, success_count = success_count + 1, last_status = 'working', consecutive_failures = 0 WHERE id = ?`).run(candidate.id);
+
+            vpn.lockActiveConfig(
+              candidate,
+              proxyTest.latencyMs,
+              proxyTest.egressIp,
+              `Proxy tunnel active (${proxyTest.latencyMs}ms). Note: OpenCode free quota exhausted.`
+            );
+
+            this.emitProgress('rate_limited', opencodeResult.userMessage, {
+              id: candidate.id,
+              protocol: candidate.protocol,
+              address: candidate.address,
+              port: candidate.port,
+              remark: candidate.remark,
+              security: candidate.security,
+              latencyMs: proxyTest.latencyMs,
+              status: 'rate_limited',
+              error: opencodeResult.userMessage
+            });
+            this.cleanupAndFinish('rate_limited', `Proxy tunnel ready (${candidate.remark}, ${proxyTest.latencyMs}ms). ${opencodeResult.userMessage}`);
             return false;
           } else {
             // Free model IP rate limit: rotate to next VPN endpoint
             await vpn.stop();
-            this.emitProgress('testing', `IP rate limit encountered. Switching to next VPN configuration to obtain fresh IP...`);
+            this.recordCandidateResult(candidate.id, proxyTest.latencyMs, 1, 0, 'RATE_LIMIT', opencodeResult.userMessage);
+            this.emitProgress('testing', `IP rate limit encountered. Switching to next VPN configuration to obtain fresh IP...`, {
+              id: candidate.id,
+              protocol: candidate.protocol,
+              address: candidate.address,
+              port: candidate.port,
+              remark: candidate.remark,
+              security: candidate.security,
+              latencyMs: proxyTest.latencyMs,
+              status: 'rate_limited',
+              error: opencodeResult.userMessage
+            });
             continue;
           }
         } else if (opencodeResult.category === 'AUTH_ERROR') {
-          await vpn.stop();
+          // OpenCode credentials error (e.g. invalid API key or 0 credentials)
+          // The proxy tunnel itself is working! Lock it in so user can use OpenCode once they configure their API key.
           this.recordCandidateResult(candidate.id, proxyTest.latencyMs, 1, 0, 'AUTH_ERROR', opencodeResult.userMessage);
-          this.emitProgress('auth_error', opencodeResult.userMessage);
-          this.cleanupAndFinish('auth_error', opencodeResult.userMessage);
+
+          db.prepare(`UPDATE configs SET is_active = 1, success_count = success_count + 1, last_status = 'working', consecutive_failures = 0 WHERE id = ?`).run(candidate.id);
+
+          vpn.lockActiveConfig(
+            candidate,
+            proxyTest.latencyMs,
+            proxyTest.egressIp,
+            `Proxy tunnel active (${proxyTest.latencyMs}ms). Note: OpenCode credentials required.`
+          );
+
+          this.emitProgress('auth_error', opencodeResult.userMessage, {
+            id: candidate.id,
+            protocol: candidate.protocol,
+            address: candidate.address,
+            port: candidate.port,
+            remark: candidate.remark,
+            security: candidate.security,
+            latencyMs: proxyTest.latencyMs,
+            status: 'auth_error',
+            error: opencodeResult.userMessage
+          });
+          this.cleanupAndFinish('auth_error', `Proxy tunnel ready (${candidate.remark}, ${proxyTest.latencyMs}ms). ${opencodeResult.userMessage}`);
           return false;
         } else {
-          // Network or other error: rotate
+          // Network or other proxy tunnel error: rotate
           await vpn.stop();
           this.recordCandidateResult(candidate.id, proxyTest.latencyMs, 1, 0, 'NETWORK_ERROR', opencodeResult.userMessage);
           this.emitProgress('testing', `OpenCode network test failed through ${candidate.remark}. Rotating...`, {
@@ -301,16 +352,22 @@ export class ConnectionOrchestrator extends EventEmitter {
     errorMessage?: string
   ): void {
     const isWorking = opencodeSuccess === 1;
-    const status = isWorking ? 'working' : (errorCategory === 'RATE_LIMIT' ? 'rate_limited' : 'failed');
+    const isProxyWorking = proxySuccess === 1;
+    // Proxies with healthy tunnels are preserved as working if OpenCode fails due to auth or account quota
+    const status = isWorking
+      ? 'working'
+      : (isProxyWorking && (errorCategory === 'AUTH_ERROR' || errorCategory === 'ACCOUNT_QUOTA'))
+      ? 'working'
+      : (errorCategory === 'RATE_LIMIT' ? 'rate_limited' : 'failed');
 
     db.prepare(`
       UPDATE configs SET
         last_tested_at = datetime('now'),
         last_latency_ms = ?,
         last_status = ?,
-        consecutive_failures = CASE WHEN ? = 1 THEN 0 ELSE consecutive_failures + 1 END
+        consecutive_failures = CASE WHEN ? = 1 OR (? = 1 AND ? IN ('AUTH_ERROR', 'ACCOUNT_QUOTA')) THEN 0 ELSE consecutive_failures + 1 END
       WHERE id = ?
-    `).run(latencyMs > 0 ? latencyMs : null, status, opencodeSuccess, configId);
+    `).run(latencyMs > 0 ? latencyMs : null, status, opencodeSuccess, proxySuccess, errorCategory, configId);
 
     db.prepare(`
       INSERT INTO test_history (config_id, latency_ms, proxy_success, opencode_success, error_category, error_message)

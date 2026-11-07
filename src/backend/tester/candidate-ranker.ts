@@ -37,7 +37,7 @@ export class CandidateRanker {
         CASE WHEN last_latency_ms IS NOT NULL AND last_latency_ms > 0 THEN last_latency_ms ELSE 9999 END ASC,
         id ASC
       LIMIT ?
-    `).all(limit * 2) as any[];
+    `).all(limit * 4) as any[];
 
     // Calculate smart score
     const scored: RankedConfigRow[] = rows.map((r) => {
@@ -52,7 +52,8 @@ export class CandidateRanker {
       // Penalty for consecutive failures
       score -= r.consecutive_failures * 30;
 
-      // Bonus for VLESS Reality/TLS
+      // Bonus for VLESS Reality/TLS and lightweight Shadowsocks
+      if (r.protocol === 'ss') score += 25;
       if (r.protocol === 'vless') score += 20;
       if (r.security === 'reality') score += 15;
       if (r.protocol === 'trojan') score += 10;

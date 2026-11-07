@@ -41,13 +41,21 @@ export class ErrorClassifier {
       combined.includes('quota exceeded') ||
       combined.includes('resource has been exhausted')
     ) {
-      const isFreeModelLimit = combined.includes('free usage limit reached') || combined.includes('free models work in opencode');
+      const isAccountQuota =
+        combined.includes('plan and billing details') ||
+        combined.includes('insufficient_quota') ||
+        combined.includes('credit limit');
+
+      const isFreeModelLimit =
+        combined.includes('free usage limit reached') ||
+        combined.includes('free models work in opencode');
+
       return {
         category: 'RATE_LIMIT',
-        isRecoverableBySwitchingVpn: isFreeModelLimit, // Free model limit is often IP-tied in OpenCode
-        userMessage: isFreeModelLimit
-          ? 'OpenCode free usage limit reached for this IP. Rotating VPN endpoint may provide fresh quota.'
-          : 'Provider account rate limit reached (HTTP 429). Rotating VPN will not bypass account-level quota.'
+        isRecoverableBySwitchingVpn: isFreeModelLimit && !isAccountQuota,
+        userMessage: isAccountQuota
+          ? 'Provider account rate limit reached (HTTP 429). Rotating VPN will not bypass account-level quota.'
+          : 'OpenCode free usage limit reached for this IP. Rotating VPN endpoint may provide fresh quota.'
       };
     }
 

@@ -238,6 +238,7 @@ export const App: React.FC = () => {
               logs={liveLogs}
               isTesting={status?.isRunning || false}
               currentMessage={status?.message || ''}
+              activeConnectionId={status?.activeConnection?.id}
             />
           </>
         ) : (
