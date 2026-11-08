@@ -4,7 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import { db, initDatabase, getSetting, setSetting } from './db/database';
 import { VpnEngine } from './vpn/vpn-engine';
-import { OpenCodeService } from './opencode/opencode-service';
+import { OpenCodeService, APPROVED_FREE_MODELS } from './opencode/opencode-service';
 import { ConnectionOrchestrator } from './orchestrator/connection-orchestrator';
 import { ConfigFetcher } from './discovery/config-fetcher';
 import { LatencyTester } from './tester/latency-tester';
@@ -91,23 +91,37 @@ app.get('/api/status', async (req: Request, res: Response) => {
     ...status,
     normalIp,
     socksPort: getSetting('socks_port', '10808'),
-    httpPort: getSetting('http_port', '10809')
+    httpPort: getSetting('http_port', '10809'),
+    scanCandidateLimit: getSetting('scan_candidate_limit', '100'),
+    verificationModel: opencode.getApprovedVerificationModel(),
+    approvedFreeModels: APPROVED_FREE_MODELS
   });
 });
 
 // Trigger "Find Working Connection"
 app.post('/api/workflow/start', async (req: Request, res: Response) => {
   const forceRefresh = Boolean(req.body.forceRefresh);
+  const scanLimit = req.body.scanLimit;
   if (orchestrator.getStatus().isRunning) {
     return res.status(409).json({ error: 'Testing workflow already running' });
   }
 
   // Run asynchronously so response is returned immediately
-  orchestrator.findWorkingConnection(forceRefresh).catch((err) => {
+  orchestrator.findWorkingConnection(forceRefresh, scanLimit).catch((err) => {
     console.error('Workflow error:', err);
   });
 
   res.json({ success: true, message: 'Workflow started' });
+});
+
+// Update Settings
+app.post('/api/settings', (req: Request, res: Response) => {
+  const { key, value } = req.body;
+  if (!key || typeof key !== 'string') {
+    return res.status(400).json({ error: 'Setting key is required' });
+  }
+  setSetting(key, String(value));
+  res.json({ success: true, key, value });
 });
 
 // Stop Testing
@@ -243,7 +257,7 @@ app.post('/api/configs/test-single', async (req: Request, res: Response) => {
 
 // Manually activate a configuration
 app.post('/api/configs/:id/activate', async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(String(req.params.id), 10);
   const row = db.prepare('SELECT * FROM configs WHERE id = ?').get(id) as any;
   if (!row) {
     return res.status(404).json({ error: 'Configuration not found' });
@@ -269,7 +283,7 @@ app.post('/api/configs/:id/activate', async (req: Request, res: Response) => {
 
 // Delete a configuration
 app.delete('/api/configs/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(String(req.params.id), 10);
   db.prepare('DELETE FROM configs WHERE id = ?').run(id);
   res.json({ success: true, message: 'Configuration deleted' });
 });
@@ -312,7 +326,7 @@ app.post('/api/sources', (req: Request, res: Response) => {
 
 // Refresh single source
 app.post('/api/sources/:id/refresh', async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(String(req.params.id), 10);
   const summaries = await ConfigFetcher.fetchAllSources(id);
   res.json({ success: true, summary: summaries[0] });
 });
@@ -325,7 +339,7 @@ app.post('/api/sources/refresh-all', async (req: Request, res: Response) => {
 
 // Delete Source
 app.delete('/api/sources/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(String(req.params.id), 10);
   db.prepare('DELETE FROM sources WHERE id = ?').run(id);
   res.json({ success: true });
 });

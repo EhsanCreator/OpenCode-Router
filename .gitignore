@@ -44,3 +44,9 @@ bin/README.md
 # OS Metadata
 .DS_Store
 Thumbs.db
+
+# Internal Reports, Backups and Local Visual Artifacts
+artifacts/
+*.bak*
+OPENCODE_FREE_TIER_QUOTA_FORENSIC_REPORT.md
+LINKEDIN_VISUAL_ASSETS_REPORT.md
