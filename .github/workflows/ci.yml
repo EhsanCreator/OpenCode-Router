@@ -48,7 +48,14 @@ jobs:
         run: npm run provision:xray
 
       - name: Run Cross-Platform Platform Tests
-        run: npx tsx tests/platform-tests.ts
+        shell: bash
+        run: |
+          npx tsx tests/platform-tests.ts > platform-tests.log 2>&1 || {
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < <(tail -n 40 platform-tests.log)
+            exit 1
+          }
 
       - name: Run Acceptance & Security Test Scenarios
         run: npm test
