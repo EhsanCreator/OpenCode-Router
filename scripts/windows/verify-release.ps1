@@ -81,8 +81,8 @@ if ($nodeCmd) {
     $nodeVerStr = (& node -v).Trim()
     $results.node.version = $nodeVerStr
     $nodeVer = [version]($nodeVerStr -replace '^v', '')
-    $nodeValid = ($nodeVer.Major -eq 20 -and $nodeVer.Minor -ge 19) -or ($nodeVer.Major -ge 22 -and $nodeVer.Minor -ge 12) -or ($nodeVer.Major -gt 22)
-    Log-Test "Node.js Version Requirement (^20.19.0 || >=22.12.0)" $nodeValid "Detected: $nodeVerStr ($($nodeCmd.Source))"
+    $nodeValid = ($nodeVer.Major -eq 20 -and $nodeVer.Minor -ge 18) -or ($nodeVer.Major -ge 22 -and $nodeVer.Minor -ge 12) -or ($nodeVer.Major -gt 22)
+    Log-Test "Node.js Version Requirement (^20.18.0 || >=22.12.0)" $nodeValid "Detected: $nodeVerStr ($($nodeCmd.Source))"
 } else {
     Log-Test "Node.js Runtime Installed" $false "Node.js executable not found in PATH"
 }

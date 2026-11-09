@@ -256,7 +256,7 @@ async function runPlatformTests() {
   assert.strictEqual(Platform.isProcessAlive(dummyChild.pid), false, 'Verified process must be terminated');
 
   // Verify ownership record matching against our own process
-  const actualStartMs = Platform.getLinuxProcessStartTimeMs(process.pid) || Date.now();
+  const actualStartMs = Platform.getProcessStartTimeMs(process.pid) || Date.now();
   const matchingRecord = {
     pid: process.pid,
     ownerId: 'opencode-router-test',

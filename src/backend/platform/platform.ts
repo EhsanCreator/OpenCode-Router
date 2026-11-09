@@ -616,29 +616,74 @@ export class Platform {
   /**
    * Calculate precise Linux process start time in milliseconds since Unix epoch
    * using /proc/<pid>/stat starttime ticks, /proc/stat btime, and system clock ticks (100 Hz).
-   * Unlike file inode ctime, this represents the actual kernel process creation timestamp.
+   * Fallback to /proc/<pid> directory inode ctime if /proc/stat btime is unavailable.
    * Handles process comm names with spaces and parentheses by indexing from the last ')'.
    */
   public static getLinuxProcessStartTimeMs(pid: number): number | null {
     try {
-      const statContent = fs.readFileSync(`/proc/${pid}/stat`, 'utf-8');
-      const closeParenIdx = statContent.lastIndexOf(')');
-      if (closeParenIdx === -1) return null;
-      const rest = statContent.slice(closeParenIdx + 1).trim().split(/\s+/);
-      // field 22 is index 19 (0-based) after closing parenthesis
-      const starttimeTicks = Number(rest[19]);
-      if (!Number.isFinite(starttimeTicks)) return null;
+      if (fs.existsSync(`/proc/${pid}/stat`)) {
+        const statContent = fs.readFileSync(`/proc/${pid}/stat`, 'utf-8');
+        const closeParenIdx = statContent.lastIndexOf(')');
+        if (closeParenIdx !== -1) {
+          const rest = statContent.slice(closeParenIdx + 1).trim().split(/\s+/);
+          // field 22 is index 19 (0-based) after closing parenthesis
+          const starttimeTicks = Number(rest[19]);
+          if (Number.isFinite(starttimeTicks)) {
+            try {
+              const statFile = fs.readFileSync('/proc/stat', 'utf-8');
+              const btimeLine = statFile.split('\n').find((l) => l.startsWith('btime '));
+              if (btimeLine) {
+                const btimeSeconds = Number(btimeLine.split(' ')[1]);
+                if (Number.isFinite(btimeSeconds)) {
+                  // Standard Linux clock ticks frequency is 100 Hz
+                  return btimeSeconds * 1000 + Math.round((starttimeTicks / 100) * 1000);
+                }
+              }
+            } catch {}
+          }
+        }
+      }
 
-      const statFile = fs.readFileSync('/proc/stat', 'utf-8');
-      const btimeLine = statFile.split('\n').find((l) => l.startsWith('btime '));
-      if (!btimeLine) return null;
-      const btimeSeconds = Number(btimeLine.split(' ')[1]);
-      if (!Number.isFinite(btimeSeconds)) return null;
-
-      // Standard Linux clock ticks frequency is 100 Hz
-      return btimeSeconds * 1000 + Math.round((starttimeTicks / 100) * 1000);
-    } catch {
+      // Robust fallback: Kernel sets /proc/<pid> directory ctime to process creation time
+      if (fs.existsSync(`/proc/${pid}`)) {
+        const stat = fs.statSync(`/proc/${pid}`);
+        return Math.round(stat.ctimeMs || stat.mtimeMs);
+      }
       return null;
+    } catch {
+      try {
+        if (fs.existsSync(`/proc/${pid}`)) {
+          return Math.round(fs.statSync(`/proc/${pid}`).ctimeMs);
+        }
+      } catch {}
+      return null;
+    }
+  }
+
+  /**
+   * Cross-platform helper to retrieve process start time in milliseconds since Unix epoch.
+   * On Windows, uses Win32_Process CreationDate.
+   * On Linux, uses /proc/<pid>/stat kernel starttime or /proc/<pid> ctime.
+   */
+  public static getProcessStartTimeMs(pid: number): number | null {
+    if (this.isWindows()) {
+      try {
+        const psCmd = `Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}" | Select-Object @{N='Epoch';E={[DateTimeOffset]::new($_.CreationDate).ToUnixTimeMilliseconds()}} | ConvertTo-Json -Compress`;
+        const out = execSync(`powershell -NoProfile -NonInteractive -Command "${psCmd}"`, {
+          encoding: 'utf-8',
+          timeout: 4000,
+          windowsHide: true,
+          stdio: ['ignore', 'pipe', 'ignore']
+        }).trim();
+        if (out) {
+          const parsed = JSON.parse(out);
+          const epoch = typeof parsed.Epoch === 'number' ? parsed.Epoch : Number(parsed.Epoch);
+          if (Number.isFinite(epoch)) return epoch;
+        }
+      } catch {}
+      return null;
+    } else {
+      return this.getLinuxProcessStartTimeMs(pid);
     }
   }
 
@@ -694,10 +739,10 @@ export class Platform {
           return false;
         }
 
-        // C. Compare process creation time against persisted timestamp (bounded tolerance: ±15000ms)
+        // C. Compare process creation time against persisted timestamp (bounded tolerance: ±30000ms)
         if (info.CreationEpoch && typeof info.CreationEpoch === 'number') {
           const timeDiff = Math.abs(info.CreationEpoch - record.startedAt);
-          if (timeDiff > 15000) {
+          if (timeDiff > 30000) {
             return false;
           }
         } else {
@@ -708,7 +753,26 @@ export class Platform {
         const cmdLine = (info.CommandLine || '').toLowerCase();
         if (record.configPath) {
           const normalizedConfig = path.normalize(path.resolve(record.configPath)).toLowerCase();
-          if (!cmdLine.includes(normalizedConfig)) {
+          const normalizedConfigForward = normalizedConfig.replace(/\\/g, '/');
+          const normalizedConfigBack = normalizedConfig.replace(/\//g, '\\');
+          const relConfig = path.normalize(record.configPath).toLowerCase();
+          const relConfigForward = relConfig.replace(/\\/g, '/');
+          const relConfigBack = relConfig.replace(/\//g, '\\');
+          const relToRoot = path.relative(this.getProjectRoot(), record.configPath).toLowerCase();
+          const relToRootForward = relToRoot.replace(/\\/g, '/');
+          const relToRootBack = relToRoot.replace(/\//g, '\\');
+
+          const cmdLineForward = cmdLine.replace(/\\/g, '/');
+
+          const configMatched =
+            cmdLineForward.includes(normalizedConfigForward) ||
+            cmdLine.includes(normalizedConfigBack) ||
+            cmdLineForward.includes(relConfigForward) ||
+            cmdLine.includes(relConfigBack) ||
+            cmdLineForward.includes(relToRootForward) ||
+            cmdLine.includes(relToRootBack);
+
+          if (!configMatched) {
             return false;
           }
         }
@@ -746,7 +810,7 @@ export class Platform {
         const kernelStartMs = this.getLinuxProcessStartTimeMs(record.pid);
         if (!kernelStartMs) return false;
         const timeDiff = Math.abs(kernelStartMs - record.startedAt);
-        if (timeDiff > 15000) {
+        if (timeDiff > 30000) {
           return false;
         }
 
@@ -763,21 +827,35 @@ export class Platform {
 
         if (record.configPath) {
           const normalizedConfig = path.resolve(record.configPath);
+          let realConfig = normalizedConfig;
+          try {
+            if (fs.existsSync(normalizedConfig)) realConfig = fs.realpathSync(normalizedConfig);
+          } catch {}
+
           const configArgFound = cmdlineArgs.some((arg) => {
             try {
+              const cleanedArg = arg.replace(/^--?[a-zA-Z0-9_-]+=/, '');
+              const resolvedArg = path.resolve(cleanedArg);
+              let realArg = resolvedArg;
+              try {
+                if (fs.existsSync(resolvedArg)) realArg = fs.realpathSync(resolvedArg);
+              } catch {}
               return (
-                path.resolve(arg) === normalizedConfig ||
+                resolvedArg === normalizedConfig ||
+                realArg === realConfig ||
+                arg === record.configPath ||
                 arg.includes(normalizedConfig) ||
-                normalizedConfig.includes(arg) ||
-                arg.includes(path.basename(normalizedConfig))
+                arg.includes(realConfig)
               );
             } catch {
               return false;
             }
           });
+
           if (
             !configArgFound &&
             !cmdlineJoined.includes(normalizedConfig) &&
+            !cmdlineJoined.includes(realConfig) &&
             !cmdlineJoined.includes(record.configPath)
           ) {
             return false;
