@@ -31,11 +31,11 @@ $binDir = Join-Path $projectRoot "bin"
 $outputExe = Join-Path $binDir "opencode-vpn.exe"
 
 if (-not (Test-Path $sourceFile)) {
-    Write-Host "::error::[OpenCode Router] Source file not found: $sourceFile"
+    [Console]::Out.WriteLine("::error::[OpenCode Router] Source file not found: $sourceFile")
     if ($Strict -or $env:OPENCODE_REQUIRE_NATIVE_LAUNCHER -eq "1") {
-        throw "[OpenCode Router] Source file not found: $sourceFile"
+        [Console]::Error.WriteLine("[OpenCode Router] Source file not found: $sourceFile")
+        exit 1
     }
-    Write-Error "[OpenCode Router] Source file not found: $sourceFile"
     exit 1
 }
 
@@ -44,17 +44,21 @@ if (-not (Test-Path $binDir)) {
 }
 
 # Locate C# Compiler (csc.exe) preinstalled on Windows 10/11 or VS/BuildTools
+$progFiles = [Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFiles)
+$progFilesX86 = [Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86)
+$windir = [Environment]::GetFolderPath([Environment+SpecialFolder]::Windows)
+
 $cscCandidates = @(
-    "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\Roslyn\csc.exe",
-    "$env:windir\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
-    "$env:windir\Microsoft.NET\Framework\v4.0.30319\csc.exe",
+    (Join-Path $progFiles "Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFilesX86 "Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFiles "Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFilesX86 "Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFiles "Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFilesX86 "Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFiles "Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $progFilesX86 "Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\Roslyn\csc.exe"),
+    (Join-Path $windir "Microsoft.NET\Framework64\v4.0.30319\csc.exe"),
+    (Join-Path $windir "Microsoft.NET\Framework\v4.0.30319\csc.exe"),
     "csc.exe"
 )
 
@@ -72,12 +76,12 @@ foreach ($candidate in $cscCandidates) {
 
     if (-not $resolvedPath) { continue }
 
-    Write-Host "🔨 Attempting compilation with $resolvedPath..." -ForegroundColor Cyan
+    [Console]::Out.WriteLine("🔨 Attempting compilation with $resolvedPath...")
 
-    # Try two flag sets: first with explicit assembly references, then fallback to default references
+    # Flag options: Note that in csc.exe the /out: switch must NOT have quotes around /out:
     $flagSets = @(
-        "/nologo /optimize+ /target:exe /reference:System.dll /reference:System.Core.dll `"/out:$outputExe`" `"$sourceFile`"",
-        "/nologo /optimize+ /target:exe `"/out:$outputExe`" `"$sourceFile`""
+        "/nologo /optimize+ /target:exe /reference:System.dll /reference:System.Core.dll /out:`"$outputExe`" `"$sourceFile`"",
+        "/nologo /optimize+ /target:exe /out:`"$outputExe`" `"$sourceFile`""
     )
 
     foreach ($argsStr in $flagSets) {
@@ -97,7 +101,7 @@ foreach ($candidate in $cscCandidates) {
             $exitCode = $proc.ExitCode
 
             if ($exitCode -eq 0 -and (Test-Path $outputExe)) {
-                Write-Host "✅ Native Windows launcher built successfully: $outputExe" -ForegroundColor Green
+                [Console]::Out.WriteLine("✅ Native Windows launcher built successfully: $outputExe")
                 $compiled = $true
                 break
             } else {
@@ -116,9 +120,9 @@ foreach ($candidate in $cscCandidates) {
 }
 
 if (-not $compiled) {
-    Write-Host "::error::Failed to compile native launcher ($outputExe) with any C# compiler."
+    [Console]::Out.WriteLine("::error::Failed to compile native launcher ($outputExe) with any C# compiler.")
     foreach ($logLine in $compilationLogs) {
-        Write-Host "::error::$logLine"
+        [Console]::Out.WriteLine("::error::$logLine")
     }
 
     if ($env:GITHUB_STEP_SUMMARY) {
@@ -129,7 +133,8 @@ if (-not $compiled) {
     }
 
     if ($Strict -or $env:OPENCODE_REQUIRE_NATIVE_LAUNCHER -eq "1") {
-        throw "Failed to compile $outputExe. All candidate C# compilers failed. See above diagnostics."
+        [Console]::Error.WriteLine("Failed to compile $outputExe. All candidate C# compilers failed. See above diagnostics.")
+        exit 1
     }
 
     Write-Warning "[OpenCode Router] Native launcher could not be compiled. The PowerShell launcher (bin\opencode-vpn.ps1) will be used."

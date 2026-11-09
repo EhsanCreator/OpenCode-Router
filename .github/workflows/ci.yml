@@ -82,36 +82,48 @@ jobs:
 
       - name: Build Native Windows Launcher & Verify Arguments (Windows Only)
         if: runner.os == 'Windows'
-        shell: powershell
+        shell: bash
         run: |
-          & .\scripts\windows\build-launcher.ps1 -Strict
-          if (-not (Test-Path "bin/opencode-vpn.exe")) {
-            throw "Native launcher compilation failed: bin/opencode-vpn.exe not found"
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/build-launcher.ps1 -Strict 2>&1 | tee build-launcher.log || {
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < build-launcher.log
+            exit 1
           }
-          Write-Host "Native launcher compiled successfully."
+          if [ ! -f "bin/opencode-vpn.exe" ]; then
+            echo "::error::bin/opencode-vpn.exe was not created"
+            exit 1
+          fi
+          echo "Native launcher compiled successfully."
 
       - name: Verify Windows Scripts & Packaging (Windows Only)
         if: runner.os == 'Windows'
-        shell: powershell
+        shell: bash
         run: |
-          & .\scripts\windows\check-environment.ps1
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/check-environment.ps1
           npm run package:portable
-          # Test extraction in clean directory
-          $pkg = Get-ChildItem dist-release/*.zip | Select-Object -First 1
-          if (-not $pkg) { throw "Portable package not found" }
-          $testExtractDir = Join-Path $env:TEMP "ocr-portable-verify"
-          if (Test-Path $testExtractDir) { Remove-Item -Recurse -Force $testExtractDir }
-          Expand-Archive -Path $pkg.FullName -DestinationPath $testExtractDir
-          if (-not (Test-Path "$testExtractDir/Start-Router.bat")) { throw "Start-Router.bat missing from package" }
-          if (-not (Test-Path "$testExtractDir/bin/opencode-vpn.exe")) { throw "bin/opencode-vpn.exe missing from Windows package" }
-          if (-not (Test-Path "$testExtractDir/bin/opencode-vpn.cmd")) { throw "bin/opencode-vpn.cmd missing" }
-          if (-not (Test-Path "$testExtractDir/bin/opencode-vpn.ps1")) { throw "bin/opencode-vpn.ps1 missing" }
-          Write-Host "Portable package verified and extracted cleanly."
+          powershell.exe -NoProfile -Command "
+            \$pkg = Get-ChildItem dist-release/*.zip | Select-Object -First 1
+            if (-not \$pkg) { throw 'Portable package not found' }
+            \$testExtractDir = Join-Path \$env:TEMP 'ocr-portable-verify'
+            if (Test-Path \$testExtractDir) { Remove-Item -Recurse -Force \$testExtractDir }
+            Expand-Archive -Path \$pkg.FullName -DestinationPath \$testExtractDir
+            if (-not (Test-Path \"\$testExtractDir/Start-Router.bat\")) { throw 'Start-Router.bat missing from package' }
+            if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.exe\")) { throw 'bin/opencode-vpn.exe missing from Windows package' }
+            if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.cmd\")) { throw 'bin/opencode-vpn.cmd missing' }
+            if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.ps1\")) { throw 'bin/opencode-vpn.ps1 missing' }
+          "
+          echo "Portable package verified and extracted cleanly."
 
       - name: Run Native Windows Release Verification Kit (Windows Only)
         if: runner.os == 'Windows'
-        shell: powershell
+        shell: bash
         run: |
-          & .\scripts\windows\verify-release.ps1
-          Write-Host "Native Windows verification kit passed."
-          Write-Host "NOTE: Windows ARM64 target matrix remains IMPLEMENTED BUT UNVERIFIED on real ARM64 hardware."
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/verify-release.ps1 2>&1 | tee verify-release.log || {
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < verify-release.log
+            exit 1
+          }
+          echo "Native Windows verification kit passed."
+          echo "NOTE: Windows ARM64 target matrix remains IMPLEMENTED BUT UNVERIFIED on real ARM64 hardware."
