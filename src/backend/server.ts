@@ -347,11 +347,15 @@ app.delete('/api/sources/:id', (req: Request, res: Response) => {
 // Diagnostics
 app.get('/api/diagnostics', (req: Request, res: Response) => {
   const opencodeInfo = { ...opencode.getInfo() };
-  const userHome = os.homedir() || process.env.HOME || '';
+  const userHome = os.homedir() || process.env.USERPROFILE || process.env.HOME || '';
   const sanitizePath = (p?: string): string => {
     if (!p) return '';
-    if (userHome && p.startsWith(userHome)) {
-      return p.replace(userHome, '~');
+    if (userHome) {
+      const normalizedP = path.normalize(p);
+      const normalizedHome = path.normalize(userHome);
+      if (normalizedP.toLowerCase().startsWith(normalizedHome.toLowerCase())) {
+        return '~' + normalizedP.slice(normalizedHome.length);
+      }
     }
     return p;
   };

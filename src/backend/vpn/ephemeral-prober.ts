@@ -7,6 +7,7 @@ import { VpnEngine } from './vpn-engine';
 import { LatencyTester, ProxyTestResult } from '../tester/latency-tester';
 import { safeWriteSensitiveFile, ensureSecureDirectory } from '../security/file-guard';
 import { RankedConfigRow } from '../tester/candidate-ranker';
+import { Platform } from '../platform/platform';
 
 export interface EphemeralProbeResult {
   candidate: RankedConfigRow;
@@ -134,8 +135,9 @@ export class EphemeralTunnelProber {
     let child: ChildProcess | null = null;
 
     try {
-      child = spawn(binPath, ['run', '-c', configPath], {
-        stdio: ['ignore', 'ignore', 'ignore']
+      child = Platform.safeSpawn(binPath, ['run', '-c', configPath], {
+        stdio: ['ignore', 'ignore', 'ignore'],
+        windowsHide: true
       });
       EphemeralTunnelProber.activeProcesses.add(child);
 
@@ -162,12 +164,9 @@ export class EphemeralTunnelProber {
       // Clean up child process
       if (child) {
         EphemeralTunnelProber.activeProcesses.delete(child);
-        try {
-          child.kill('SIGTERM');
-        } catch {}
-        try {
-          child.kill('SIGKILL');
-        } catch {}
+        if (child.pid) {
+          await Platform.terminateProcess(child.pid, { expectedNames: ['xray'] });
+        }
       }
 
       // Remove temporary config file

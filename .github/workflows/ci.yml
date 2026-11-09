@@ -1,0 +1,82 @@
+name: Cross-Platform CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [20, 22]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Frontend Application
+        run: npm run build:frontend
+
+      - name: Provision Xray-core
+        run: npm run provision:xray
+
+      - name: Run Cross-Platform Platform Tests
+        run: npx tsx tests/platform-tests.ts
+
+      - name: Run Acceptance & Security Test Scenarios
+        run: npm test
+
+      - name: Run High-Speed Pipeline Tests
+        run: npx tsx tests/pipeline-speed-tests.ts
+
+      - name: Build Documentation
+        run: npm run docs:build
+
+      - name: Build Native Windows Launcher & Verify Arguments (Windows Only)
+        if: runner.os == 'Windows'
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/windows/build-launcher.ps1 -Strict
+          if (-not (Test-Path "bin/opencode-vpn.exe")) {
+            throw "Native launcher compilation failed: bin/opencode-vpn.exe not found"
+          }
+          Write-Host "Native launcher compiled successfully."
+
+      - name: Verify Windows Scripts & Packaging (Windows Only)
+        if: runner.os == 'Windows'
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/windows/check-environment.ps1
+          npm run package:portable
+          # Test extraction in clean directory
+          $pkg = Get-ChildItem dist-release/*.zip | Select-Object -First 1
+          if (-not $pkg) { throw "Portable package not found" }
+          $testExtractDir = Join-Path $env:TEMP "ocr-portable-verify"
+          if (Test-Path $testExtractDir) { Remove-Item -Recurse -Force $testExtractDir }
+          Expand-Archive -Path $pkg.FullName -DestinationPath $testExtractDir
+          if (-not (Test-Path "$testExtractDir/Start-Router.bat")) { throw "Start-Router.bat missing from package" }
+          if (-not (Test-Path "$testExtractDir/bin/opencode-vpn.exe")) { throw "bin/opencode-vpn.exe missing from Windows package" }
+          if (-not (Test-Path "$testExtractDir/bin/opencode-vpn.cmd")) { throw "bin/opencode-vpn.cmd missing" }
+          if (-not (Test-Path "$testExtractDir/bin/opencode-vpn.ps1")) { throw "bin/opencode-vpn.ps1 missing" }
+          Write-Host "Portable package verified and extracted cleanly."
+
+      - name: Run Native Windows Release Verification Kit (Windows Only)
+        if: runner.os == 'Windows'
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/windows/verify-release.ps1
+          Write-Host "Native Windows verification kit passed."
+          Write-Host "NOTE: Windows ARM64 target matrix remains IMPLEMENTED BUT UNVERIFIED on real ARM64 hardware."

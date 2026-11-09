@@ -50,7 +50,14 @@ export function safeWriteSensitiveFile(filePath: string, data: string): void {
     fs.writeSync(fd, data, 0, 'utf-8');
 
     // 3. Explicitly fchmod to 0600 to correct existing files (POSIX open doesn't chmod existing files)
-    fs.fchmodSync(fd, 0o600);
+    try {
+      fs.fchmodSync(fd, 0o600);
+    } catch (err: any) {
+      // fchmod is not implemented on Windows (ENOSYS)
+      if (err.code !== 'ENOSYS' && process.platform !== 'win32') {
+        throw err;
+      }
+    }
   } finally {
     fs.closeSync(fd);
   }
