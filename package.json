@@ -28,7 +28,7 @@
     "docs:preview": "vitepress preview docs"
   },
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": ">=22.12.0"
   },
   "keywords": [
     "opencode",

@@ -11,13 +11,11 @@ jobs:
   test:
     name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
-    env:
-      GYP_MSVS_VERSION: '2022'
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        node-version: ['20.19.x', '22.x']
+        os: [ubuntu-latest, windows-2022]
+        node-version: ['22.x', '24.x']
 
     steps:
       - name: Checkout Repository
@@ -27,10 +25,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Configure Build Tools (Windows)
-        if: runner.os == 'Windows'
-        run: npm config set msvs_version 2022
 
       - name: Verify Environment
         run: |
@@ -46,10 +40,6 @@ jobs:
             done < <(tail -n 35 npm-install.log)
             exit 1
           }
-
-      - name: Rebuild Native Modules (Linux Node 20 Only)
-        if: runner.os == 'Linux' && startsWith(matrix.node-version, '20')
-        run: npm rebuild better-sqlite3 --build-from-source
 
       - name: Build Frontend Application
         run: npm run build:frontend
