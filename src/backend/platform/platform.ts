@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { spawn, execSync, SpawnOptions, ChildProcess } from 'child_process';
+import { spawn, execSync, execFileSync, SpawnOptions, ChildProcess } from 'child_process';
 import { ensureSecureDirectory } from '../security/file-guard';
 
 export interface AppPaths {
@@ -405,9 +405,9 @@ export class Platform {
 
     if (this.isWindows()) {
       try {
-        const out = execSync(`tasklist /fi "PID eq ${pid}" /fo csv /nh`, {
+        const out = execFileSync('tasklist.exe', ['/fi', `PID eq ${pid}`, '/fo', 'csv', '/nh'], {
           encoding: 'utf-8',
-          timeout: 2000,
+          timeout: 5000,
           windowsHide: true,
           stdio: ['ignore', 'pipe', 'ignore']
         }).trim();
@@ -536,7 +536,7 @@ export class Platform {
 
               // Snapshot atomically via VACUUM INTO (safely rolls uncheckpointed WAL pages into destination)
               if (fs.existsSync(dst)) fs.unlinkSync(dst);
-              sourceDb.exec(`VACUUM INTO '${dst.replace(/'/g, "''")}'`);
+              sourceDb.exec(`VACUUM INTO '${dst.replace(/\\/g, '/').replace(/'/g, "''")}'`);
               sourceDb.close();
 
               // Verify destination snapshot
@@ -669,9 +669,9 @@ export class Platform {
     if (this.isWindows()) {
       try {
         const psCmd = `Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}" | Select-Object @{N='Epoch';E={[DateTimeOffset]::new($_.CreationDate).ToUnixTimeMilliseconds()}} | ConvertTo-Json -Compress`;
-        const out = execSync(`powershell -NoProfile -NonInteractive -Command "${psCmd}"`, {
+        const out = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psCmd], {
           encoding: 'utf-8',
-          timeout: 4000,
+          timeout: 10000,
           windowsHide: true,
           stdio: ['ignore', 'pipe', 'ignore']
         }).trim();
@@ -716,9 +716,9 @@ export class Platform {
     if (this.isWindows()) {
       try {
         const psCmd = `Get-CimInstance Win32_Process -Filter "ProcessId = ${record.pid}" | Select-Object ProcessId, ExecutablePath, CommandLine, @{N='CreationEpoch';E={[DateTimeOffset]::new($_.CreationDate).ToUnixTimeMilliseconds()}} | ConvertTo-Json -Compress`;
-        const out = execSync(`powershell -NoProfile -NonInteractive -Command "${psCmd}"`, {
+        const out = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psCmd], {
           encoding: 'utf-8',
-          timeout: 4000,
+          timeout: 10000,
           windowsHide: true,
           stdio: ['ignore', 'pipe', 'ignore']
         }).trim();
@@ -922,7 +922,7 @@ export class Platform {
       // We allow a bounded wait window before escalating.
       if (!options?.force) {
         try {
-          execSync(`taskkill /pid ${pid} /t`, { stdio: 'ignore', timeout: 2000, windowsHide: true });
+          execFileSync('taskkill.exe', ['/pid', String(pid), '/t'], { stdio: 'ignore', timeout: 5000, windowsHide: true });
         } catch {
           // Process may not respond to WM_CLOSE
         }
@@ -950,7 +950,7 @@ export class Platform {
         }
 
         try {
-          execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore', timeout: 3000, windowsHide: true });
+          execFileSync('taskkill.exe', ['/pid', String(pid), '/t', '/f'], { stdio: 'ignore', timeout: 5000, windowsHide: true });
         } catch {
           try {
             process.kill(pid);

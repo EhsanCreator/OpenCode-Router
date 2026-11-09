@@ -222,10 +222,17 @@ async function runPlatformTests() {
   const echoScript = `console.log(JSON.stringify(process.argv.slice(1)));`;
   const echoChild = Platform.safeSpawn(process.execPath, ['-e', echoScript, ...complexArgs]);
   let echoOutput = '';
+  let echoError = '';
   echoChild.stdout?.on('data', (d) => (echoOutput += d.toString()));
+  echoChild.stderr?.on('data', (d) => (echoError += d.toString()));
   await new Promise<void>((resolve) => echoChild.on('close', () => resolve()));
 
-  const receivedArgs = JSON.parse(echoOutput.trim());
+  let receivedArgs: string[];
+  try {
+    receivedArgs = JSON.parse(echoOutput.trim());
+  } catch (err: any) {
+    throw new Error(`Failed to parse echoChild output. Stdout: "${echoOutput}", Stderr: "${echoError}", Error: ${err.message}`);
+  }
   // The first item in slice(1) is the '-e' or code string depending on node version; check subsequent items
   for (const arg of complexArgs) {
     assert(receivedArgs.includes(arg), `Argument must be preserved verbatim: ${arg}`);
@@ -264,7 +271,16 @@ async function runPlatformTests() {
     configPath: path.join(Platform.getProjectRoot(), 'tests', 'platform-tests.ts'),
     startedAt: actualStartMs
   };
-  assert.strictEqual(Platform.verifyProcessOwnership(matchingRecord), true, 'Process ownership must verify with valid matching record');
+  const verified = Platform.verifyProcessOwnership(matchingRecord);
+  if (!verified) {
+    console.error('Ownership verification failed for matchingRecord:', {
+      matchingRecord,
+      processPid: process.pid,
+      execPath: process.execPath,
+      actualStartMs
+    });
+  }
+  assert.strictEqual(verified, true, 'Process ownership must verify with valid matching record');
 
   // Verify ownership record rejection with mismatched configPath
   const mismatchedRecord = {

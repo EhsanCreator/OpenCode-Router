@@ -34,10 +34,8 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          npm install --no-audit > npm-install.log 2>&1 || {
-            while IFS= read -r line; do
-              echo "::error::$line"
-            done < <(tail -n 35 npm-install.log)
+          npm install --no-audit 2>&1 | tee npm-install.log || {
+            echo "::error::$(tail -n 10 npm-install.log | tr '\n' ' ')"
             exit 1
           }
 
@@ -50,10 +48,12 @@ jobs:
       - name: Run Cross-Platform Platform Tests
         shell: bash
         run: |
-          npx tsx tests/platform-tests.ts > platform-tests.log 2>&1 || {
-            while IFS= read -r line; do
-              echo "::error::$line"
-            done < <(tail -n 40 platform-tests.log)
+          npx tsx tests/platform-tests.ts 2>&1 | tee platform-tests.log || {
+            echo "::error::$(tail -n 5 platform-tests.log | tr '\n' ' ')"
+            echo "### Platform Tests Failure Log" >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            cat platform-tests.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           }
 
