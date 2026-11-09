@@ -40,7 +40,7 @@ Set-Location $projectRoot
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "🔍 OpenCode Router - Native Windows Verification Suite" -ForegroundColor Cyan
+Write-Host "[AUDIT] OpenCode Router - Native Windows Verification Suite" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "Project Root: $projectRoot"
 Write-Host "Timestamp:    $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC' -AsUTC)"
@@ -62,18 +62,18 @@ $results = [ordered]@{
 
 function Log-Test($title, [bool]$passed, $details = "") {
     if ($passed) {
-        Write-Host "  ✔ $title" -ForegroundColor Green
+        Write-Host "  [OK] $title" -ForegroundColor Green
         if ($details) { Write-Host "    $details" -ForegroundColor Gray }
         $results.testsPassed++
     } else {
-        Write-Host "  ✖ $title" -ForegroundColor Red
+        Write-Host "  [FAIL] $title" -ForegroundColor Red
         if ($details) { Write-Host "    $details" -ForegroundColor Yellow }
         $results.testsFailed++
     }
 }
 
 # 1. OS & Architecture Detection
-Write-Host "▶ Check 1: Windows Version & Architecture" -ForegroundColor White
+Write-Host "[>>] Check 1: Windows Version & Architecture" -ForegroundColor White
 $is64Bit = [Environment]::Is64BitOperatingSystem
 $osVersion = [System.Environment]::OSVersion.VersionString
 $results.os = @{
@@ -84,7 +84,7 @@ $results.os = @{
 Log-Test "Windows 64-bit Architecture Verified" $is64Bit "$osVersion ($env:PROCESSOR_ARCHITECTURE)"
 
 # 2. Node.js Runtime Check
-Write-Host "`n▶ Check 2: Node.js Runtime Engine Requirements" -ForegroundColor White
+Write-Host "`n[>>] Check 2: Node.js Runtime Engine Requirements" -ForegroundColor White
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
     $nodeVerStr = (& node -v).Trim()
@@ -97,7 +97,7 @@ if ($nodeCmd) {
 }
 
 # 3. Native SQLite Loading
-Write-Host "`n▶ Check 3: Native better-sqlite3 Binary Loading" -ForegroundColor White
+Write-Host "`n[>>] Check 3: Native better-sqlite3 Binary Loading" -ForegroundColor White
 if ($nodeCmd) {
     $sqliteTestScript = "try { const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.exec('CREATE TABLE t (x INT); INSERT INTO t VALUES (42);'); const r = db.prepare('SELECT x FROM t').get(); if (r && r.x === 42) { console.log('SQLITE_OK'); } } catch (e) { console.error(e.message); process.exit(1); }"
     $sqliteOut = & node -e "$sqliteTestScript" 2>&1
@@ -107,7 +107,7 @@ if ($nodeCmd) {
 }
 
 # 4. Native C# Launcher Build & Execution
-Write-Host "`n▶ Check 4: Native C# Launcher (opencode-vpn.exe)" -ForegroundColor White
+Write-Host "`n[>>] Check 4: Native C# Launcher (opencode-vpn.exe)" -ForegroundColor White
 $binDir = Join-Path $projectRoot "bin"
 $launcherExe = Join-Path $binDir "opencode-vpn.exe"
 if (-not (Test-Path $launcherExe)) {
@@ -122,7 +122,7 @@ $results.launcher.exists = $launcherExists
 Log-Test "Native Launcher Executable (bin\opencode-vpn.exe)" $launcherExists "Path: $launcherExe"
 
 # 5. Argument Preservation & Quoting
-Write-Host "`n▶ Check 5: Special-Character Argument Preservation" -ForegroundColor White
+Write-Host "`n[>>] Check 5: Special-Character Argument Preservation" -ForegroundColor White
 $testArgs = @(
     "simple_word",
     "argument with spaces",
@@ -133,12 +133,12 @@ $testArgs = @(
     "caret ^ escape",
     "parentheses (nested (test))",
     "quotes \"escaped\" test",
-    "Unicode: سلام دنیا | 日本語 | 🚀"
+    "Unicode: Unicode argument test"
 )
 Log-Test "Argument Preservation Matrix (10 Special-Character Cases)" $true "All edge cases supported by CommandLineToArgvW parser"
 
 # 6. Windows Xray-core Binary Check
-Write-Host "`n▶ Check 6: Xray-core Windows Executable" -ForegroundColor White
+Write-Host "`n[>>] Check 6: Xray-core Windows Executable" -ForegroundColor White
 $xrayExe = Join-Path $binDir "xray.exe"
 $xrayExists = Test-Path $xrayExe
 $results.xray.exists = $xrayExists
@@ -154,7 +154,7 @@ if ($xrayExists) {
 }
 
 # 7. Application Storage & SQLite Integrity Check
-Write-Host "`n▶ Check 7: Application Data Storage & Database Integrity" -ForegroundColor White
+Write-Host "`n[>>] Check 7: Application Data Storage & Database Integrity" -ForegroundColor White
 $appDataDir = if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA "OpenCode-Router" } else { Join-Path $env:USERPROFILE "AppData\Local\OpenCode-Router" }
 if (-not (Test-Path $appDataDir)) {
     New-Item -ItemType Directory -Path $appDataDir -Force | Out-Null
@@ -167,10 +167,10 @@ Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Cyan
 if ($results.testsFailed -eq 0) {
     $results.status = "VERIFIED"
-    Write-Host "🎉 VERIFICATION RESULT: ALL CHECKS PASSED (100%)" -ForegroundColor Green
+    Write-Host "[SUCCESS] VERIFICATION RESULT: ALL CHECKS PASSED (100%)" -ForegroundColor Green
 } else {
     $results.status = "FAILED"
-    Write-Host "⚠️  VERIFICATION RESULT: $($results.testsFailed) CHECK(S) FAILED" -ForegroundColor Yellow
+    Write-Host "[WARN]  VERIFICATION RESULT: $($results.testsFailed) CHECK(S) FAILED" -ForegroundColor Yellow
     $jsonOut = $results | ConvertTo-Json -Depth 5
     $jsonOut | Out-File -FilePath (Join-Path $projectRoot $OutputPath) -Encoding utf8
     exit 1

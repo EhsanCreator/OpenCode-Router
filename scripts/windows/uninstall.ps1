@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "🗑️  Uninstalling OpenCode Router (Windows)" -ForegroundColor Cyan
+Write-Host "[RM]  Uninstalling OpenCode Router (Windows)" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -41,7 +41,7 @@ $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($currentPath -like "*$binDir*") {
     $cleanPath = ($currentPath.Split(';') | Where-Object { $_ -ne $binDir -and $_ -ne "" }) -join ';'
     [Environment]::SetEnvironmentVariable("Path", $cleanPath, "User")
-    Write-Host "[✓] Removed '$binDir' from User PATH." -ForegroundColor Green
+    Write-Host "[[v]] Removed '$binDir' from User PATH." -ForegroundColor Green
 }
 
 # 3. Remove Desktop Shortcut
@@ -49,7 +49,7 @@ $desktopPath = [Environment]::GetFolderPath("Desktop")
 $shortcutPath = Join-Path $desktopPath "OpenCode Router.lnk"
 if (Test-Path $shortcutPath) {
     Remove-Item -Path $shortcutPath -Force -ErrorAction SilentlyContinue
-    Write-Host "[✓] Removed Desktop shortcut." -ForegroundColor Green
+    Write-Host "[[v]] Removed Desktop shortcut." -ForegroundColor Green
 }
 
 # 4. AppData cleanup if requested
@@ -67,13 +67,13 @@ $legacyAppData = if ($env:LOCALAPPDATA) {
 if ($PurgeData) {
     if (Test-Path $appDataDir) {
         Remove-Item -Path $appDataDir -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Host "[✓] Purged application data at $appDataDir" -ForegroundColor Green
+        Write-Host "[[v]] Purged application data at $appDataDir" -ForegroundColor Green
     }
     if (Test-Path $legacyAppData) {
         Remove-Item -Path $legacyAppData -Recurse -Force -ErrorAction SilentlyContinue
     }
 } else {
-    Write-Host "[ℹ] Preserved application data and database at: $appDataDir" -ForegroundColor Gray
+    Write-Host "[?] Preserved application data and database at: $appDataDir" -ForegroundColor Gray
     Write-Host "    (Use -PurgeData to permanently remove databases and cache)" -ForegroundColor Gray
 }
 

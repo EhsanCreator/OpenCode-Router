@@ -29,33 +29,33 @@ Set-Location $projectRoot
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "🛡️  Starting OpenCode Router (Windows)" -ForegroundColor Cyan
+Write-Host "[SEC]  Starting OpenCode Router (Windows)" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # 1. Provision Xray if missing
 $xrayBin = Join-Path $projectRoot "bin\xray.exe"
 if (-not (Test-Path $xrayBin)) {
-    Write-Host "📥 Windows Xray binary not found. Provisioning official release..." -ForegroundColor Cyan
+    Write-Host "[DL] Windows Xray binary not found. Provisioning official release..." -ForegroundColor Cyan
     npx tsx scripts/provision-xray.ts
 }
 
 # 2. Build frontend if dist/ does not exist
 $frontendDist = Join-Path $projectRoot "src\frontend\dist\index.html"
 if (-not (Test-Path $frontendDist)) {
-    Write-Host "📦 Compiling modern frontend application..." -ForegroundColor Cyan
+    Write-Host "[PKG] Compiling modern frontend application..." -ForegroundColor Cyan
     npm run build:frontend
 }
 
 # 3. Start backend server
-Write-Host "🚀 Launching backend server on port $Port..." -ForegroundColor Cyan
+Write-Host "? Launching backend server on port $Port..." -ForegroundColor Cyan
 $env:PORT = $Port.ToString()
 
 # Start background Node/tsx process
 $serverProcess = Start-Process -FilePath "npx.cmd" -ArgumentList "tsx", "src/backend/server.ts" -PassThru -NoNewWindow
 
 # 4. Wait for server readiness
-Write-Host "⏳ Waiting for HTTP service readiness..." -ForegroundColor Cyan
+Write-Host "? Waiting for HTTP service readiness..." -ForegroundColor Cyan
 $ready = $false
 $maxAttempts = 30
 
@@ -72,7 +72,7 @@ for ($i = 1; $i -le $maxAttempts; $i++) {
 }
 
 if (-not $ready) {
-    Write-Host "❌ Backend server failed to start within timeout." -ForegroundColor Red
+    Write-Host "? Backend server failed to start within timeout." -ForegroundColor Red
     if ($serverProcess -and -not $serverProcess.HasExited) {
         Stop-Process -Id $serverProcess.Id -Force
     }
@@ -81,11 +81,11 @@ if (-not $ready) {
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "✅ OpenCode Router is LIVE and READY!" -ForegroundColor Green
+Write-Host "[+] OpenCode Router is LIVE and READY!" -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "🌐 Web Dashboard: http://127.0.0.1:$Port" -ForegroundColor Cyan
-Write-Host "🔌 SOCKS5 Proxy:  127.0.0.1:10808" -ForegroundColor Gray
-Write-Host "🔌 HTTP Proxy:    127.0.0.1:10809" -ForegroundColor Gray
+Write-Host "? Web Dashboard: http://127.0.0.1:$Port" -ForegroundColor Cyan
+Write-Host "? SOCKS5 Proxy:  127.0.0.1:10808" -ForegroundColor Gray
+Write-Host "? HTTP Proxy:    127.0.0.1:10809" -ForegroundColor Gray
 Write-Host ""
 Write-Host "To use OpenCode CLI with active proxy:" -ForegroundColor Cyan
 Write-Host "   opencode-vpn" -ForegroundColor Yellow

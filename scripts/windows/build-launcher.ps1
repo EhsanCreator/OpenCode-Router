@@ -76,7 +76,7 @@ foreach ($candidate in $cscCandidates) {
 
     if (-not $resolvedPath) { continue }
 
-    [Console]::Out.WriteLine("🔨 Attempting compilation with $resolvedPath...")
+    [Console]::Out.WriteLine("[*] Attempting compilation with $resolvedPath...")
 
     # Flag options: Note that in csc.exe the /out: switch must NOT have quotes around /out:
     $flagSets = @(
@@ -101,7 +101,7 @@ foreach ($candidate in $cscCandidates) {
             $exitCode = $proc.ExitCode
 
             if ($exitCode -eq 0 -and (Test-Path $outputExe)) {
-                [Console]::Out.WriteLine("✅ Native Windows launcher built successfully: $outputExe")
+                [Console]::Out.WriteLine("[+] Native Windows launcher built successfully: $outputExe")
                 $compiled = $true
                 break
             } else {

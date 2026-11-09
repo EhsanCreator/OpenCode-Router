@@ -35,7 +35,7 @@ Set-Location $projectRoot
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "🛡️  Installing OpenCode Router on Windows" -ForegroundColor Cyan
+Write-Host "[SEC]  Installing OpenCode Router on Windows" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "Project Directory: $projectRoot"
 Write-Host ""
@@ -47,7 +47,7 @@ if (Test-Path $diagScript) {
 }
 
 # 2. Install Dependencies
-Write-Host "📦 Installing project dependencies..." -ForegroundColor Cyan
+Write-Host "[PKG] Installing project dependencies..." -ForegroundColor Cyan
 if (Test-Path "package-lock.json") {
     npm ci
 } else {
@@ -57,15 +57,15 @@ if (Test-Path "package-lock.json") {
 # 3. Build Frontend
 if (-not $SkipFrontendBuild) {
     Write-Host ""
-    Write-Host "🏗️  Compiling modern React dashboard..." -ForegroundColor Cyan
+    Write-Host "[BUILD]  Compiling modern React dashboard..." -ForegroundColor Cyan
     npm run build:frontend
 } else {
-    Write-Host "⏩ Skipping frontend build (-SkipFrontendBuild specified)." -ForegroundColor Yellow
+    Write-Host "[SKIP] Skipping frontend build (-SkipFrontendBuild specified)." -ForegroundColor Yellow
 }
 
 # 4. Provision Windows Xray-core
 Write-Host ""
-Write-Host "📥 Provisioning official Windows Xray-core..." -ForegroundColor Cyan
+Write-Host "[DL] Provisioning official Windows Xray-core..." -ForegroundColor Cyan
 npx tsx scripts/provision-xray.ts
 
 # 5. Initialize AppData Directory
@@ -87,7 +87,7 @@ if ((Test-Path $legacyAppData) -and -not (Test-Path $appDataDir)) {
 }
 
 Write-Host ""
-Write-Host "📁 Initializing application data storage..." -ForegroundColor Cyan
+Write-Host "[DIR] Initializing application data storage..." -ForegroundColor Cyan
 $subdirs = @("data", "configs", "logs", "bin")
 foreach ($d in $subdirs) {
     $target = Join-Path $appDataDir $d
@@ -106,7 +106,7 @@ if (-not (Test-Path $binDir)) {
 $buildLauncherScript = Join-Path $projectRoot "scripts\windows\build-launcher.ps1"
 if (Test-Path $buildLauncherScript) {
     Write-Host ""
-    Write-Host "🔨 Compiling native Windows OpenCode launcher (opencode-vpn.exe)..." -ForegroundColor Cyan
+    Write-Host "[*] Compiling native Windows OpenCode launcher (opencode-vpn.exe)..." -ForegroundColor Cyan
     $strictFlag = if ($RequireNativeLauncher) { "-Strict" } else { "" }
     & powershell -NoProfile -ExecutionPolicy Bypass -File "$buildLauncherScript" $strictFlag
     $compiledExe = Join-Path $binDir "opencode-vpn.exe"
@@ -123,7 +123,7 @@ if (Test-Path $buildLauncherScript) {
 # 7. Configure user PATH for opencode-vpn
 if (-not $SkipPathRegistration) {
     Write-Host ""
-    Write-Host "🔗 Configuring user PATH environment variable..." -ForegroundColor Cyan
+    Write-Host "[LINK] Configuring user PATH environment variable..." -ForegroundColor Cyan
     $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($currentPath -notlike "*$binDir*") {
         $newPath = "$binDir;$currentPath"
@@ -139,7 +139,7 @@ if (-not $SkipPathRegistration) {
 # 8. Create Desktop Shortcut if requested
 if ($CreateShortcut) {
     Write-Host ""
-    Write-Host "📌 Creating Desktop Shortcut..." -ForegroundColor Cyan
+    Write-Host "[PIN] Creating Desktop Shortcut..." -ForegroundColor Cyan
     $wscript = New-Object -ComObject WScript.Shell
     $desktopPath = [Environment]::GetFolderPath("Desktop")
     $shortcutPath = Join-Path $desktopPath "OpenCode Router.lnk"
@@ -155,7 +155,7 @@ if ($CreateShortcut) {
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "🎉 OpenCode Router installed successfully on Windows!" -ForegroundColor Green
+Write-Host "[SUCCESS] OpenCode Router installed successfully on Windows!" -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "To start the application:" -ForegroundColor Cyan
