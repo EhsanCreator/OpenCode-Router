@@ -32,18 +32,15 @@ jobs:
           npm -v
 
       - name: Install Dependencies
-        run: npm install --no-audit
-
-      - name: Debug npm Failure
-        if: failure()
         shell: bash
         run: |
-          echo "=== NPM DEBUG LOGS ==="
-          for dir in "$HOME" "$APPDATA" "$LOCALAPPDATA" "/home/runner" "C:/Users"; do
-            if [ -d "$dir" ]; then
-              find "$dir" -name "*debug*.log" -exec cat {} + 2>/dev/null || true
-            fi
-          done
+          if ! npm install --no-audit 2>&1 | tee npm-install.log; then
+            echo "## NPM Install Failure Output" >> $GITHUB_STEP_SUMMARY
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 npm-install.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
 
       - name: Build Frontend Application
         run: npm run build:frontend
