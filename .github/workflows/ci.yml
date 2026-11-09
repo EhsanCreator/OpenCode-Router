@@ -35,11 +35,9 @@ jobs:
         shell: bash
         run: |
           npm install --no-audit > npm-install.log 2>&1 || {
-            echo "## NPM Install Failure Output (${{ matrix.os }} - Node ${{ matrix.node-version }})" >> $GITHUB_STEP_SUMMARY
-            echo '```text' >> $GITHUB_STEP_SUMMARY
-            tail -n 120 npm-install.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            cat npm-install.log
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < <(tail -n 25 npm-install.log)
             exit 1
           }
 
