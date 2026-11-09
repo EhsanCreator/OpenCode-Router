@@ -84,7 +84,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          powershell -ExecutionPolicy Bypass -File scripts/windows/build-launcher.ps1 -Strict
+          & .\scripts\windows\build-launcher.ps1 -Strict
           if (-not (Test-Path "bin/opencode-vpn.exe")) {
             throw "Native launcher compilation failed: bin/opencode-vpn.exe not found"
           }
@@ -94,7 +94,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          powershell -ExecutionPolicy Bypass -File scripts/windows/check-environment.ps1
+          & .\scripts\windows\check-environment.ps1
           npm run package:portable
           # Test extraction in clean directory
           $pkg = Get-ChildItem dist-release/*.zip | Select-Object -First 1
@@ -112,6 +112,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          powershell -ExecutionPolicy Bypass -File scripts/windows/verify-release.ps1
+          & .\scripts\windows\verify-release.ps1
           Write-Host "Native Windows verification kit passed."
           Write-Host "NOTE: Windows ARM64 target matrix remains IMPLEMENTED BUT UNVERIFIED on real ARM64 hardware."

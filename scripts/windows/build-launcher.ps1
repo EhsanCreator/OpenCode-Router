@@ -50,16 +50,21 @@ foreach ($candidate in $cscCandidates) {
 
 if ($cscPath) {
     Write-Host "🔨 Compiling native launcher with $cscPath..." -ForegroundColor Cyan
-    $compileOutput = & "$cscPath" /nologo /optimize+ /target:exe "/out:$outputExe" "$sourceFile" 2>&1
-    Write-Host ($compileOutput | Out-String)
-    if ($LASTEXITCODE -eq 0 -and (Test-Path $outputExe)) {
+    $oldEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & "$cscPath" /nologo /optimize+ /target:exe "/out:$outputExe" "$sourceFile"
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $oldEap
+
+    if ($code -eq 0 -and (Test-Path $outputExe)) {
         Write-Host "✅ Native Windows launcher built successfully: $outputExe" -ForegroundColor Green
         exit 0
     } else {
         if ($Strict -or $env:OPENCODE_REQUIRE_NATIVE_LAUNCHER -eq "1") {
-            throw "Failed to compile $outputExe (ExitCode: $LASTEXITCODE). Output: $compileOutput"
+            throw "Failed to compile $outputExe (ExitCode: $code)"
         }
-        Write-Error "Failed to compile $outputExe (ExitCode: $LASTEXITCODE)"
+        Write-Error "Failed to compile $outputExe (ExitCode: $code)"
+        exit $code
     }
 } else {
     # Fallback to dotnet if available
