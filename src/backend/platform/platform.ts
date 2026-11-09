@@ -759,10 +759,23 @@ export class Platform {
 
         if (record.configPath) {
           const normalizedConfig = path.resolve(record.configPath);
-          const configArgFound = cmdlineArgs.some(
-            (arg) => path.resolve(arg) === normalizedConfig || arg.includes(normalizedConfig)
-          );
-          if (!configArgFound && !cmdlineJoined.includes(normalizedConfig)) {
+          const configArgFound = cmdlineArgs.some((arg) => {
+            try {
+              return (
+                path.resolve(arg) === normalizedConfig ||
+                arg.includes(normalizedConfig) ||
+                normalizedConfig.includes(arg) ||
+                arg.includes(path.basename(normalizedConfig))
+              );
+            } catch {
+              return false;
+            }
+          });
+          if (
+            !configArgFound &&
+            !cmdlineJoined.includes(normalizedConfig) &&
+            !cmdlineJoined.includes(record.configPath)
+          ) {
             return false;
           }
         }

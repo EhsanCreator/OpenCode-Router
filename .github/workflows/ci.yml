@@ -11,6 +11,9 @@ jobs:
   test:
     name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +53,7 @@ jobs:
 
       - name: Build Native Windows Launcher & Verify Arguments (Windows Only)
         if: runner.os == 'Windows'
+        shell: powershell
         run: |
           powershell -ExecutionPolicy Bypass -File scripts/windows/build-launcher.ps1 -Strict
           if (-not (Test-Path "bin/opencode-vpn.exe")) {
@@ -59,6 +63,7 @@ jobs:
 
       - name: Verify Windows Scripts & Packaging (Windows Only)
         if: runner.os == 'Windows'
+        shell: powershell
         run: |
           powershell -ExecutionPolicy Bypass -File scripts/windows/check-environment.ps1
           npm run package:portable
@@ -76,6 +81,7 @@ jobs:
 
       - name: Run Native Windows Release Verification Kit (Windows Only)
         if: runner.os == 'Windows'
+        shell: powershell
         run: |
           powershell -ExecutionPolicy Bypass -File scripts/windows/verify-release.ps1
           Write-Host "Native Windows verification kit passed."
