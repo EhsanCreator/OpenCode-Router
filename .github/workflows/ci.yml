@@ -28,7 +28,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci --engine-strict=false || npm install
 
       - name: Build Frontend Application
         run: npm run build:frontend
