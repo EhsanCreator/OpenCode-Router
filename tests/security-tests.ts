@@ -373,44 +373,62 @@ export async function runSecurityTests() {
     const tempDir = path.join(os.tmpdir(), `opencode-sec-test-${Date.now()}`);
     ensureSecureDirectory(tempDir);
 
-    const dirStat = fs.statSync(tempDir);
-    assert.strictEqual(dirStat.mode & 0o777, 0o700, 'Parent directory must have restricted permissions (0700)');
+    const isWindows = process.platform === 'win32';
+
+    if (!isWindows) {
+      const dirStat = fs.statSync(tempDir);
+      assert.strictEqual(dirStat.mode & 0o777, 0o700, 'Parent directory must have restricted permissions (0700)');
+    }
 
     // Subtest 8A: Newly created sensitive file has mode 0600
     const sensitiveFile = path.join(tempDir, 'active-xray-config.json');
     safeWriteSensitiveFile(sensitiveFile, JSON.stringify({ secret: 'password123' }));
-    const fileStat = fs.statSync(sensitiveFile);
-    assert.strictEqual(fileStat.mode & 0o777, 0o600, 'Newly created sensitive file must have mode 0600');
+    if (!isWindows) {
+      const fileStat = fs.statSync(sensitiveFile);
+      assert.strictEqual(fileStat.mode & 0o777, 0o600, 'Newly created sensitive file must have mode 0600');
+    }
     assert.strictEqual(fs.readFileSync(sensitiveFile, 'utf-8'), JSON.stringify({ secret: 'password123' }));
     console.log('  ✔ Newly created sensitive file enforced mode 0600.');
 
     // Subtest 8B: Overwriting pre-existing file with permissive mode (0664) is corrected to 0600
-    fs.chmodSync(sensitiveFile, 0o664);
-    assert.strictEqual(fs.statSync(sensitiveFile).mode & 0o777, 0o664, 'Setup: file made permissive 0664');
-    safeWriteSensitiveFile(sensitiveFile, JSON.stringify({ secret: 'updatedPassword' }));
-    const updatedStat = fs.statSync(sensitiveFile);
-    assert.strictEqual(updatedStat.mode & 0o777, 0o600, 'Overwritten file must have permissions corrected to 0600');
+    if (!isWindows) {
+      fs.chmodSync(sensitiveFile, 0o664);
+      assert.strictEqual(fs.statSync(sensitiveFile).mode & 0o777, 0o664, 'Setup: file made permissive 0664');
+      safeWriteSensitiveFile(sensitiveFile, JSON.stringify({ secret: 'updatedPassword' }));
+      const updatedStat = fs.statSync(sensitiveFile);
+      assert.strictEqual(updatedStat.mode & 0o777, 0o600, 'Overwritten file must have permissions corrected to 0600');
+    } else {
+      safeWriteSensitiveFile(sensitiveFile, JSON.stringify({ secret: 'updatedPassword' }));
+    }
+    assert.strictEqual(fs.readFileSync(sensitiveFile, 'utf-8'), JSON.stringify({ secret: 'updatedPassword' }));
     console.log('  ✔ Overwrite of pre-existing permissive file explicitly corrected to 0600.');
 
     // Subtest 8C: Symlink overwrite attack blocked
     const targetFile = path.join(tempDir, 'critical-target.txt');
-    fs.writeFileSync(targetFile, 'PROTECTED_SYSTEM_DATA', { mode: 0o600 });
+    fs.writeFileSync(targetFile, 'PROTECTED_SYSTEM_DATA');
     const symlinkPath = path.join(tempDir, 'symlink-attack-file.json');
-    fs.symlinkSync(targetFile, symlinkPath);
-
-    assert.throws(
-      () => safeWriteSensitiveFile(symlinkPath, 'MALICIOUS_OVERWRITE'),
-      /Refusing to write through symbolic link/,
-      'Attempt to write through symlink must throw security error'
-    );
-    assert.strictEqual(fs.readFileSync(targetFile, 'utf-8'), 'PROTECTED_SYSTEM_DATA', 'Target file must not be modified through symlink');
-    console.log('  ✔ Symlink overwrite attack strictly blocked; target preserved.');
+    try {
+      fs.symlinkSync(targetFile, symlinkPath);
+      assert.throws(
+        () => safeWriteSensitiveFile(symlinkPath, 'MALICIOUS_OVERWRITE'),
+        /Refusing to write through symbolic link/,
+        'Attempt to write through symlink must throw security error'
+      );
+      assert.strictEqual(fs.readFileSync(targetFile, 'utf-8'), 'PROTECTED_SYSTEM_DATA', 'Target file must not be modified through symlink');
+      console.log('  ✔ Symlink overwrite attack strictly blocked; target preserved.');
+    } catch (symErr: any) {
+      if (isWindows && symErr.code === 'EPERM') {
+        console.log('  ✔ Symlink creation requires SeCreateSymbolicLinkPrivilege on Windows (skipped non-admin symlink test).');
+      } else {
+        throw symErr;
+      }
+    }
 
     // Cleanup
     try {
-      fs.unlinkSync(symlinkPath);
-      fs.unlinkSync(sensitiveFile);
-      fs.unlinkSync(targetFile);
+      if (fs.existsSync(symlinkPath)) fs.unlinkSync(symlinkPath);
+      if (fs.existsSync(sensitiveFile)) fs.unlinkSync(sensitiveFile);
+      if (fs.existsSync(targetFile)) fs.unlinkSync(targetFile);
       fs.rmdirSync(tempDir);
     } catch {}
     console.log('  ✔ Temporary test files and directory cleaned up.\n');

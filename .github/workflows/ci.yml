@@ -58,10 +58,24 @@ jobs:
           }
 
       - name: Run Acceptance & Security Test Scenarios
-        run: npm test
+        shell: bash
+        run: |
+          npm test 2>&1 | tee test-scenarios.log || {
+            echo "::error::$(tail -n 10 test-scenarios.log | tr '\n' ' ')"
+            echo "### Test Scenarios Failure Log" >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            cat test-scenarios.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
 
       - name: Run High-Speed Pipeline Tests
-        run: npx tsx tests/pipeline-speed-tests.ts
+        shell: bash
+        run: |
+          npx tsx tests/pipeline-speed-tests.ts 2>&1 | tee pipeline-speed.log || {
+            echo "::error::$(tail -n 10 pipeline-speed.log | tr '\n' ' ')"
+            exit 1
+          }
 
       - name: Build Documentation
         run: npm run docs:build
