@@ -132,7 +132,7 @@ $testArgs = @(
     "percent %PATH% test",
     "caret ^ escape",
     "parentheses (nested (test))",
-    "quotes \"escaped\" test",
+    'quotes "escaped" test',
     "Unicode: Unicode argument test"
 )
 Log-Test "Argument Preservation Matrix (10 Special-Character Cases)" $true "All edge cases supported by CommandLineToArgvW parser"
