@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -71,12 +70,12 @@ namespace OpenCodeRouter
                 {
                     injectStandalone = true;
                 }
-                else if (!firstArg.StartsWith("-") && !excludedSubcommands.Contains(firstArg.ToLowerInvariant()))
+                else if (!firstArg.StartsWith("-") && Array.IndexOf(excludedSubcommands, firstArg.ToLowerInvariant()) < 0)
                 {
                     injectStandalone = true;
                 }
 
-                if (args.Contains("--standalone"))
+                if (Array.IndexOf(args, "--standalone") >= 0)
                 {
                     injectStandalone = false;
                 }

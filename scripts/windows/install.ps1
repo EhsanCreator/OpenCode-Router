@@ -20,7 +20,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = Resolve-Path (Join-Path $scriptDir "..\..")
+$projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
 
 Set-Location $projectRoot
 

@@ -18,7 +18,7 @@ Write-Host "==========================================================" -Foregro
 Write-Host ""
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = Resolve-Path (Join-Path $scriptDir "..\..")
+$projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
 
 # 1. Stop all running processes
 $stopScript = Join-Path $scriptDir "stop.ps1"
