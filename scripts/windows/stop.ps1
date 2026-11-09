@@ -31,8 +31,17 @@ foreach ($conn in $connections) {
 }
 
 # 2. Stop owned Xray process verified against active connection ownership record
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+
+$projectRoot = $null
+if ($scriptDir -and (Test-Path (Join-Path $scriptDir "..\..\package.json"))) {
+    $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
+} elseif (Test-Path "package.json") {
+    $projectRoot = (Get-Location).Path
+} else {
+    $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
+}
 $stateFiles = @(
     (Join-Path $projectRoot "data\active-connection.json"),
     (Join-Path $env:LOCALAPPDATA "OpenCode-Router\active-connection.json"),

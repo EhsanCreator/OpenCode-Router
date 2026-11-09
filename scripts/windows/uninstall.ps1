@@ -17,8 +17,17 @@ Write-Host "🗑️  Uninstalling OpenCode Router (Windows)" -ForegroundColor Cy
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+
+$projectRoot = $null
+if ($scriptDir -and (Test-Path (Join-Path $scriptDir "..\..\package.json"))) {
+    $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
+} elseif (Test-Path "package.json") {
+    $projectRoot = (Get-Location).Path
+} else {
+    $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "..\.."))
+}
 
 # 1. Stop all running processes
 $stopScript = Join-Path $scriptDir "stop.ps1"
