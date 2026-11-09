@@ -34,13 +34,14 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          if ! npm install --no-audit 2>&1 | tee npm-install.log; then
-            echo "## NPM Install Failure Output" >> $GITHUB_STEP_SUMMARY
+          npm install --no-audit > npm-install.log 2>&1 || {
+            echo "## NPM Install Failure Output (${{ matrix.os }} - Node ${{ matrix.node-version }})" >> $GITHUB_STEP_SUMMARY
             echo '```text' >> $GITHUB_STEP_SUMMARY
             tail -n 120 npm-install.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+            cat npm-install.log
             exit 1
-          fi
+          }
 
       - name: Build Frontend Application
         run: npm run build:frontend
