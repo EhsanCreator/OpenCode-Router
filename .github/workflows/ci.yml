@@ -2,7 +2,7 @@ name: Cross-Platform CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/**', 'feature/*']
   pull_request:
     branches: [main]
   workflow_dispatch:
