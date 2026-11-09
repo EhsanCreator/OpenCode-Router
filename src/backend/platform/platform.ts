@@ -732,8 +732,12 @@ export class Platform {
         const exeLink = path.join(procDir, 'exe');
         if (!fs.existsSync(exeLink)) return false;
         const actualExe = fs.readlinkSync(exeLink);
-        const normalizedActualExe = path.resolve(actualExe);
-        const normalizedExpectedExe = path.resolve(record.executablePath);
+        let normalizedActualExe = path.resolve(actualExe);
+        let normalizedExpectedExe = path.resolve(record.executablePath);
+        try {
+          if (fs.existsSync(normalizedActualExe)) normalizedActualExe = fs.realpathSync(normalizedActualExe);
+          if (fs.existsSync(normalizedExpectedExe)) normalizedExpectedExe = fs.realpathSync(normalizedExpectedExe);
+        } catch {}
         if (normalizedActualExe !== normalizedExpectedExe) {
           return false;
         }
