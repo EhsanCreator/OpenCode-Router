@@ -104,6 +104,54 @@ async function runPlatformTests() {
   assert(psContent.includes('exit $LASTEXITCODE'), 'PS launcher must preserve $LASTEXITCODE');
   assert(psContent.includes('finally {'), 'PS launcher must clean up process environment');
 
+  // Regression Test: PowerShell Hashtable Case-Insensitive Duplicate Keys Check
+  // PowerShell hash literals @{ ... } strictly disallow duplicate keys ignoring case.
+  const psScriptsToVerify = [
+    psLauncher,
+    ...fs.readdirSync(path.join(Platform.getProjectRoot(), 'scripts', 'windows'))
+      .filter((f: string) => f.endsWith('.ps1'))
+      .map((f: string) => path.join(Platform.getProjectRoot(), 'scripts', 'windows', f))
+  ];
+
+  for (const scriptPath of psScriptsToVerify) {
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    const hashRegex = /@\s*\{([^}]+)\}/g;
+    let match: RegExpExecArray | null;
+    while ((match = hashRegex.exec(content)) !== null) {
+      const body = match[1];
+      const seenKeys = new Map<string, string>();
+      for (const rawLine of body.split('\n')) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#')) continue;
+        const keyMatch = line.match(/^['"]?([a-zA-Z0-9_\-]+)['"]?\s*=/);
+        if (keyMatch) {
+          const originalKey = keyMatch[1];
+          const lowerKey = originalKey.toLowerCase();
+          if (seenKeys.has(lowerKey)) {
+            assert.fail(
+              `Duplicate case-insensitive key '${originalKey}' collided with '${seenKeys.get(lowerKey)}' in hashtable inside ${path.basename(scriptPath)}`
+            );
+          }
+          seenKeys.set(lowerKey, originalKey);
+        }
+      }
+    }
+  }
+
+  // Regression assertions specifically for bin/opencode-vpn.ps1 $oldEnv snapshotting
+  const oldEnvMatch = psContent.match(/\$oldEnv\s*=\s*@\{([^}]+)\}/);
+  assert(oldEnvMatch, 'PS launcher must define $oldEnv hashtable');
+  const oldEnvBody = oldEnvMatch[1];
+  assert(!oldEnvBody.includes('http_proxy'), '$oldEnv hashtable must not define lowercase http_proxy key');
+  assert(!oldEnvBody.includes('https_proxy'), '$oldEnv hashtable must not define lowercase https_proxy key');
+  assert(!oldEnvBody.includes('all_proxy'), '$oldEnv hashtable must not define lowercase all_proxy key');
+  assert(!oldEnvBody.includes('no_proxy'), '$oldEnv hashtable must not define lowercase no_proxy key');
+  assert(oldEnvBody.includes('HTTP_PROXY'), '$oldEnv hashtable must define canonical HTTP_PROXY key');
+  assert(oldEnvBody.includes('HTTPS_PROXY'), '$oldEnv hashtable must define canonical HTTPS_PROXY key');
+  assert(oldEnvBody.includes('ALL_PROXY'), '$oldEnv hashtable must define canonical ALL_PROXY key');
+  assert(oldEnvBody.includes('NO_PROXY'), '$oldEnv hashtable must define canonical NO_PROXY key');
+  assert(psContent.includes('ToLowerInvariant()'), 'PS launcher must restore both uppercase and lowercase in finally');
+
   // Inspect Bash launcher contents
   const bashContent = fs.readFileSync(bashLauncher, 'utf-8');
   assert(bashContent.includes('--standalone'), 'Bash launcher must support --standalone isolation');
