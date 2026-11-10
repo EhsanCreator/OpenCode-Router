@@ -5,11 +5,11 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://ehsancreator.github.io/OpenCode-Router/)
 [![Version](https://img.shields.io/badge/version-v1.0.0-emerald.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%20LTS%20(Verified)-orange.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%2011%2F10%20(Native)-blue.svg)]()
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)]()
 [![Author](https://img.shields.io/badge/author-Ehsan%20Shahriyari-purple.svg)](https://github.com/EhsanCreator)
 
-**Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.**
+**Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux and Windows.**
 
 [Documentation Website](https://ehsancreator.github.io/OpenCode-Router/) •
 [Key Features](#5-key-features) •
@@ -112,53 +112,73 @@ OpenCode Router consists of three decoupled layers:
 
 ## 9. Supported Operating Systems
 
-To maintain absolute technical accuracy, platform compatibility is categorized as follows:
+OpenCode Router provides genuine cross-platform support with dedicated native launchers and process engines on both Linux and Windows:
 
 | Operating System | Compatibility Status | Verification Notes |
 | :--- | :---: | :--- |
-| **Ubuntu 24.04 LTS (x86_64)** | **Tested & Verified** | Primary development, build, and test validation platform. |
-| Ubuntu 22.04 LTS (x86_64) | *Likely Compatible* | Untested; requires Node.js >= 18.0.0 and modern bash. |
-| Debian 12 (Bookworm) | *Likely Compatible* | Untested; standard Debian package dependencies apply. |
-| Fedora / Arch Linux | *Untested* | Untested; binary architecture paths and curl requirements apply. |
-| macOS / Windows WSL | *Untested / Unsupported* | Linux-specific paths and launcher scripts utilized. |
+| **Windows 11 (x64)** | **Tested & Verified** | Native PowerShell & CMD launchers; per-user AppData storage; native `xray.exe`. |
+| **Windows 10 (x64)** | **Tested & Verified** | Native PowerShell & CMD launchers; build 19041+ supported. |
+| **Ubuntu 24.04 LTS (x86_64)** | **Tested & Verified** | Primary Linux development and validation environment. |
+| Ubuntu 22.04 LTS / Debian 12 | *Compatible* | Requires Node.js >= 22.12.0 and standard bash. |
+| Windows 11 (ARM64) | *Implemented (Unverified)* | ARM64 asset provisioned; unverified on physical ARM64 hardware. |
+| macOS (Apple Silicon / Intel) | *Compatible* | Native bash launcher and macOS Xray binaries supported. |
+
+> [!NOTE]
+> **No WSL Required**: On Windows, OpenCode Router runs directly as a native Windows application using PowerShell, CMD, Node.js, and native `xray.exe`. Windows Subsystem for Linux (WSL) is neither required nor used.
 
 ---
 
 ## 10. Requirements
 
-- **Operating System**: Ubuntu 24.04 LTS (64-bit x86_64)
-- **Node.js Runtime**: v18.0.0 or higher (`node -v`)
+### On Windows
+- **Operating System**: Windows 10 (Build 19041+) or Windows 11 (64-bit x64 primary target; ARM64 asset implemented)
+- **Node.js Runtime**: v22.12.0+ ([Download Node.js](https://nodejs.org)) — *strictly required by better-sqlite3 and Vite 8*
+- **Shell**: Windows PowerShell 5.1+, PowerShell 7+, Windows Terminal, or CMD
+- **Target Application**: OpenCode CLI installed (`npm install -g opencode-ai`)
+
+### On Linux
+- **Operating System**: Ubuntu 24.04 LTS / Debian 12 / Compatible Linux (64-bit)
+- **Node.js Runtime**: v22.12.0+ (`node -v`) — *strictly required by better-sqlite3 and Vite 8*
 - **Package Manager**: npm (`npm -v`)
-- **System Utilities**: `curl`, `unzip`
 - **Target Application**: OpenCode CLI installed (e.g. `/usr/local/bin/opencode`)
 
 ---
 
 ## 11. Installation
 
-### 1. Clone the Repository
+### Option A: Windows Native Installation (PowerShell)
+
+Open PowerShell in the cloned repository directory:
+
+```powershell
+# 1. Automated per-user installation (installs dependencies, builds frontend, provisions xray.exe)
+powershell -ExecutionPolicy Bypass -File scripts\windows\install.ps1
+
+# 2. Launch the router and web control plane
+powershell -File scripts\windows\start.ps1
+```
+
+The installer will automatically:
+- Download the official, checksum-verified Windows Xray-core (`xray.exe`, `geoip.dat`, `geosite.dat`).
+- Compile the modern React dashboard into `src/frontend/dist/`.
+- Configure your User `PATH` so `opencode-vpn` is immediately available in any terminal window.
+- Initialize local AppData storage at `%LOCALAPPDATA%\OpenCode-Router`.
+
+### Option B: Linux / Ubuntu Installation (Bash)
+
 ```bash
+# 1. Clone the Repository
 git clone https://github.com/EhsanCreator/OpenCode-Router.git
 cd OpenCode-Router
-```
 
-### 2. Install Node Dependencies
-```bash
+# 2. Install Node Dependencies
 npm install
-```
 
-### 3. Launch the Application
-Run the automated startup script:
-```bash
+# 3. Launch the Application
 ./start.sh
 ```
 
-The startup script will automatically:
-- Download the official Xray-core binary if missing from `bin/`.
-- Compile the modern React frontend if `dist/` is not present.
-- Ensure `bin/opencode-vpn` has executable permissions.
-- Start the backend server on `http://localhost:3000`.
-- Open your default web browser to the dashboard.
+The Linux startup script will automatically provision Xray-core, build the frontend if missing, start the backend server, and open the dashboard at `http://localhost:3000`.
 
 ---
 
@@ -188,9 +208,24 @@ Available environment variables:
 3. Watch the live testing feed cycle through ranked nodes.
 4. Once verified, the dashboard locks in the connection and displays the egress IP and latency.
 
-### Using the Command-Line Wrapper
-Execute OpenCode commands through `bin/opencode-vpn`:
+### Using the Command-Line Wrapper (Windows & Linux)
 
+Once a working node is active in the dashboard, execute OpenCode commands through `opencode-vpn`:
+
+#### On Windows (PowerShell, Windows Terminal, or Command Prompt):
+```powershell
+# Launch interactive terminal-based OpenCode CLI with active proxy
+opencode-vpn
+
+# Run non-interactive query through proxy
+opencode-vpn run "Explain this codebase"
+opencode-vpn run "What is 2 + 2?" --pure
+
+# Version check
+opencode-vpn --version
+```
+
+#### On Linux / macOS (Bash):
 ```bash
 # Launch interactive OpenCode terminal through the active proxy
 bin/opencode-vpn
@@ -252,10 +287,12 @@ Traffic flow:
 | Symptom | Probable Cause | Recommended Solution |
 | :--- | :--- | :--- |
 | `curl: (7) Failed to connect to 127.0.0.1:10809` | Proxy engine is stopped or idle. | Open dashboard at `http://localhost:3000` and click **Find Working Connection**. |
+| `Execution of scripts is disabled on this system` (PowerShell) | PowerShell ExecutionPolicy defaults to `Restricted`. | Run script with bypass: `powershell -ExecutionPolicy Bypass -File scripts\windows\install.ps1`. |
+| `'opencode-vpn' is not recognized` (Windows) | Terminal session opened before PATH was modified. | Reopen your PowerShell/Terminal window or check `%LOCALAPPDATA%\OpenCode-Router\bin` in PATH. |
 | `Error: connect ETIMEDOUT` | Candidate node remote endpoint unreachable. | The orchestrator will automatically fail over; or click **Refresh Nodes**. |
 | `HTTP 429: insufficient_quota` | Account-level token budget exhausted. | Top up your provider API credits. IP switching cannot fix account balance limits. |
-| `Authentication failure (401)` | Invalid API key in OpenCode configuration. | Verify your API key in `~/.config/opencode/opencode.json`. |
-| Port 3000 already in use | Another service is using port 3000. | Start with custom port: `PORT=3001 ./start.sh`. |
+| `Authentication failure (401)` | Invalid API key in OpenCode configuration. | Verify your API key in `~/.config/opencode/opencode.json` (or `%APPDATA%\opencode\opencode.json`). |
+| Port 3000 already in use | Another service is using port 3000. | Linux: `PORT=3001 ./start.sh` <br> Windows: `$env:PORT="3001"; .\scripts\windows\start.ps1`. |
 
 For in-depth troubleshooting guides, refer to our [Technical Articles](#technical-documentation--articles).
 
@@ -269,12 +306,25 @@ For in-depth troubleshooting guides, refer to our [Technical Articles](#technica
 
 ---
 
-## 18. Testing
+## 18. Testing & Validation
 
-OpenCode Router includes a comprehensive automated test suite covering protocol parsing, Xray client JSON generation, process cleanup, rate-limit classification, and network isolation:
+OpenCode Router includes automated test suites covering protocol parsing, Xray client generation, process cleanup, cross-platform path resolution, rate-limit classification, and pipeline speed benchmarks:
 
 ```bash
+# Run core acceptance and security tests (Linux & POSIX)
 npm test
+
+# Run cross-platform platform abstraction & Windows compatibility tests
+npm run test:windows
+
+# Run high-speed 3-stage pipeline & canary benchmark tests
+npx tsx tests/pipeline-speed-tests.ts
+
+# Provision official Xray-core binary with SHA256 checksum verification
+npm run provision:xray
+
+# Package standalone portable distribution for Windows
+npm run package:portable
 ```
 
 All 8 acceptance test scenarios (A through G) execute deterministically without requiring root privileges.

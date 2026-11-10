@@ -1,7 +1,7 @@
 {
   "name": "opencode-router",
   "version": "1.0.0",
-  "description": "Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux.",
+  "description": "Automated proxy discovery, testing, and intelligent routing for OpenCode. Fix connectivity issues and IP-based rate limits with Xray/V2Ray on Linux and Windows.",
   "main": "src/backend/server.ts",
   "author": "Ehsan Shahriyari <https://github.com/EhsanCreator>",
   "license": "MIT",
@@ -20,9 +20,15 @@
     "dev:backend": "npx tsx watch src/backend/server.ts",
     "dev:frontend": "cd src/frontend && npx vite",
     "test": "npx tsx tests/test-scenarios.ts",
+    "test:windows": "npx tsx tests/platform-tests.ts",
+    "provision:xray": "npx tsx scripts/provision-xray.ts",
+    "package:portable": "npx tsx scripts/package-portable.ts",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   },
   "keywords": [
     "opencode",
@@ -35,7 +41,11 @@
     "shadowsocks",
     "proxy",
     "rate-limit",
-    "ubuntu"
+    "ubuntu",
+    "linux",
+    "windows",
+    "windows-11",
+    "cross-platform"
   ],
   "type": "commonjs",
   "dependencies": {

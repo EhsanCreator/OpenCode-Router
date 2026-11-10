@@ -21,8 +21,10 @@ data/*
 *.log
 logs/
 
-# Compiled Binaries and Assets (Auto-downloaded by start.sh)
+# Compiled Binaries and Assets (Auto-downloaded by start.sh / provision-xray.ts)
 bin/xray
+bin/xray.exe
+bin/*.exe
 bin/geoip.dat
 bin/geosite.dat
 bin/LICENSE

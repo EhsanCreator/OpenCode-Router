@@ -1,0 +1,129 @@
+name: Cross-Platform CI
+
+on:
+  push:
+    branches: [main, 'feature/**', 'feature/*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022]
+        node-version: ['22.x', '24.x']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Verify Environment
+        run: |
+          node -v
+          npm -v
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          npm ci 2>&1 | tee npm-ci.log || {
+            cat npm-ci.log
+            exit 1
+          }
+
+      - name: Build Frontend Application
+        run: npm run build:frontend
+
+      - name: Provision Xray-core
+        run: npm run provision:xray
+
+      - name: Run Cross-Platform Platform Tests
+        shell: bash
+        run: |
+          npx tsx tests/platform-tests.ts 2>&1 | tee platform-tests.log || {
+            echo "::error::$(tail -n 5 platform-tests.log | tr '\n' ' ')"
+            echo "### Platform Tests Failure Log" >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            cat platform-tests.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+
+      - name: Run Acceptance & Security Test Scenarios
+        shell: bash
+        run: |
+          npm test 2>&1 | tee test-scenarios.log || {
+            echo "::error::$(tail -n 10 test-scenarios.log | tr '\n' ' ')"
+            echo "### Test Scenarios Failure Log" >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            cat test-scenarios.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+
+      - name: Run High-Speed Pipeline Tests
+        shell: bash
+        run: |
+          npx tsx tests/pipeline-speed-tests.ts 2>&1 | tee pipeline-speed.log || {
+            echo "::error::$(tail -n 10 pipeline-speed.log | tr '\n' ' ')"
+            exit 1
+          }
+
+      - name: Build Documentation
+        run: npm run docs:build
+
+      - name: Build Native Windows Launcher & Verify Arguments (Windows Only)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/build-launcher.ps1 -Strict 2>&1 | tee build-launcher.log || {
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < build-launcher.log
+            exit 1
+          }
+          if [ ! -f "bin/opencode-vpn.exe" ]; then
+            echo "::error::bin/opencode-vpn.exe was not created"
+            exit 1
+          fi
+          echo "Native launcher compiled successfully."
+
+      - name: Verify Windows Scripts & Packaging (Windows Only)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/check-environment.ps1
+          npm run package:portable
+          powershell.exe -NoProfile -Command "
+            \$pkg = Get-ChildItem dist-release/*.zip | Select-Object -First 1
+            if (-not \$pkg) { throw 'Portable package not found' }
+            \$testExtractDir = Join-Path \$env:TEMP 'ocr-portable-verify'
+            if (Test-Path \$testExtractDir) { Remove-Item -Recurse -Force \$testExtractDir }
+            Expand-Archive -Path \$pkg.FullName -DestinationPath \$testExtractDir
+            if (-not (Test-Path \"\$testExtractDir/Start-Router.bat\")) { throw 'Start-Router.bat missing from package' }
+            if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.exe\")) { throw 'bin/opencode-vpn.exe missing from Windows package' }
+            if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.cmd\")) { throw 'bin/opencode-vpn.cmd missing' }
+            if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.ps1\")) { throw 'bin/opencode-vpn.ps1 missing' }
+          "
+          echo "Portable package verified and extracted cleanly."
+
+      - name: Run Native Windows Release Verification Kit (Windows Only)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/verify-release.ps1 2>&1 | tee verify-release.log || {
+            while IFS= read -r line; do
+              echo "::error::$line"
+            done < verify-release.log
+            exit 1
+          }
+          echo "Native Windows verification kit passed."
+          echo "NOTE: Windows ARM64 target matrix remains IMPLEMENTED BUT UNVERIFIED on real ARM64 hardware."

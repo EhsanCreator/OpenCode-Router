@@ -5,6 +5,8 @@ import net from 'net';
 import { db, getSetting } from '../db/database';
 import { XrayConfigBuilder } from './xray-config-builder';
 import { safeWriteSensitiveFile, ensureSecureDirectory } from '../security/file-guard';
+import { Platform, ProcessOwnershipRecord } from '../platform/platform';
+import crypto from 'crypto';
 
 export interface ActiveConfigInfo {
   id: number;
@@ -24,26 +26,22 @@ export class VpnEngine {
   private static instance: VpnEngine | null = null;
   private childProcess: ChildProcess | null = null;
   private currentConfig: ActiveConfigInfo | null = null;
+  private activeOwnershipRecord: ProcessOwnershipRecord | null = null;
   private binPath: string;
   private configFilePath: string;
   private stateFilePath: string;
   private isTestingMode: boolean = false;
 
   private constructor() {
-    const projectRoot = path.resolve(__dirname, '../../../');
-    this.binPath = path.join(projectRoot, 'bin', 'xray');
-    if (!fs.existsSync(this.binPath)) {
-      if (fs.existsSync('/usr/local/bin/xray')) {
-        this.binPath = '/usr/local/bin/xray';
-      } else if (fs.existsSync('/usr/local/bin/v2ray')) {
-        this.binPath = '/usr/local/bin/v2ray';
-      }
-    }
+    const paths = Platform.getPaths();
+    this.binPath = Platform.resolveXrayBinary();
 
-    const dataDir = path.join(projectRoot, 'data');
-    ensureSecureDirectory(dataDir);
-    this.configFilePath = path.join(dataDir, 'active-xray-config.json');
-    this.stateFilePath = path.join(dataDir, 'active-connection.json');
+    ensureSecureDirectory(paths.dataDir);
+    ensureSecureDirectory(paths.configsDir);
+    ensureSecureDirectory(paths.logsDir);
+
+    this.configFilePath = paths.activeConfigPath;
+    this.stateFilePath = paths.activeStatePath;
 
     this.recoverPreviousProcess();
   }
@@ -61,17 +59,13 @@ export class VpnEngine {
 
   public isRunning(): boolean {
     if (this.childProcess && this.childProcess.pid) {
-      try {
-        return process.kill(this.childProcess.pid, 0);
-      } catch {
-        return false;
-      }
+      return Platform.isProcessAlive(this.childProcess.pid);
     }
     if (fs.existsSync(this.stateFilePath)) {
       try {
         const state = JSON.parse(fs.readFileSync(this.stateFilePath, 'utf-8'));
         if (state.pid) {
-          return process.kill(state.pid, 0);
+          return Platform.isProcessAlive(state.pid);
         }
       } catch {
         return false;
@@ -143,13 +137,24 @@ export class VpnEngine {
     } catch {}
 
     return new Promise<boolean>((resolve) => {
-      const child = spawn(this.binPath, ['run', '-c', this.configFilePath], {
+      const child = Platform.safeSpawn(this.binPath, ['run', '-c', this.configFilePath], {
         stdio: ['ignore', logFd, logFd],
-        detached: true
+        detached: true,
+        windowsHide: true
       });
       child.unref();
 
       this.childProcess = child;
+      if (child.pid) {
+        this.activeOwnershipRecord = {
+          pid: child.pid,
+          ownerId: crypto.randomUUID(),
+          executablePath: path.resolve(this.binPath),
+          configPath: path.resolve(this.configFilePath),
+          commandLinePattern: path.basename(this.configFilePath),
+          startedAt: Date.now()
+        };
+      }
 
       let hasExited = false;
       child.on('error', (err) => {
@@ -216,40 +221,23 @@ export class VpnEngine {
    */
   public async stop(): Promise<void> {
     if (this.childProcess && this.childProcess.pid) {
-      try {
-        this.childProcess.kill('SIGTERM');
-      } catch {
-        // ignore
-      }
-
-      // Wait up to 1s for exit
-      await new Promise<void>((resolve) => {
-        const timeout = setTimeout(() => {
-          if (this.childProcess && this.childProcess.pid) {
-            try {
-              this.childProcess.kill('SIGKILL');
-            } catch {}
-          }
-          resolve();
-        }, 1000);
-
-        if (!this.isRunning()) {
-          clearTimeout(timeout);
-          resolve();
-        } else {
-          this.childProcess?.once('exit', () => {
-            clearTimeout(timeout);
-            resolve();
-          });
-        }
+      await Platform.terminateProcess(this.childProcess.pid, {
+        ownershipRecord: this.activeOwnershipRecord || undefined,
+        expectedNames: ['xray']
       });
     } else if (fs.existsSync(this.stateFilePath)) {
       try {
         const state = JSON.parse(fs.readFileSync(this.stateFilePath, 'utf-8'));
         if (state.pid) {
-          try { process.kill(state.pid, 'SIGTERM'); } catch {}
-          await new Promise((r) => setTimeout(r, 400));
-          try { process.kill(state.pid, 'SIGKILL'); } catch {}
+          const record: ProcessOwnershipRecord = state.ownershipRecord || {
+            pid: state.pid,
+            configPath: this.configFilePath,
+            executablePath: this.binPath
+          };
+          await Platform.terminateProcess(state.pid, {
+            ownershipRecord: record,
+            expectedNames: ['xray']
+          });
         }
       } catch {
         // ignore
@@ -257,6 +245,7 @@ export class VpnEngine {
     }
 
     this.childProcess = null;
+    this.activeOwnershipRecord = null;
     this.cleanupState();
   }
 
@@ -322,7 +311,8 @@ export class VpnEngine {
 
     const state = {
       pid: this.childProcess.pid,
-      config: this.currentConfig
+      config: this.currentConfig,
+      ownershipRecord: this.activeOwnershipRecord
     };
     try {
       safeWriteSensitiveFile(this.stateFilePath, JSON.stringify(state, null, 2));
@@ -369,12 +359,23 @@ export class VpnEngine {
       const content = fs.readFileSync(this.stateFilePath, 'utf-8');
       const state = JSON.parse(content);
       if (state.pid) {
-        try {
-          process.kill(state.pid, 0); // Is process alive?
+        const record: ProcessOwnershipRecord = state.ownershipRecord || {
+          pid: state.pid,
+          configPath: this.configFilePath,
+          executablePath: this.binPath
+        };
+
+        // Strict process ownership verification
+        const isOwner = Platform.verifyProcessOwnership(record);
+
+        if (isOwner) {
           this.currentConfig = state.config;
-          console.log(`[VPN Engine] Re-attached to running Xray instance (PID: ${state.pid})`);
-        } catch {
-          // Process not alive
+          this.activeOwnershipRecord = record;
+          console.log(`[VPN Engine] Verified and re-attached to owned Xray instance (PID: ${state.pid})`);
+        } else {
+          console.warn(
+            `[VPN Engine] Stale PID ${state.pid} discarded: failed OpenCode Router process ownership verification.`
+          );
           this.cleanupState();
         }
       }

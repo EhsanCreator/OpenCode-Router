@@ -1,19 +1,26 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { Platform } from '../platform/platform';
+import { ensureSecureDirectory } from '../security/file-guard';
 
-const DB_DIR = path.resolve(__dirname, '../../../data');
-if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true, mode: 0o700 });
+const paths = Platform.getPaths();
+const DB_DIR = paths.dataDir;
+ensureSecureDirectory(DB_DIR);
+
+// If legacy unhyphenated directory exists, safely migrate data before opening database
+const legacyDir = Platform.isWindows()
+  ? path.join(process.env.LOCALAPPDATA || path.join(require('os').homedir(), 'AppData', 'Local'), 'OpenCodeRouter')
+  : path.join(require('os').homedir(), '.config', 'OpenCodeRouter');
+
+if (fs.existsSync(legacyDir) && !fs.existsSync(paths.dbPath)) {
+  Platform.migrateLegacyDataDirectory(legacyDir, DB_DIR);
 }
-try {
-  fs.chmodSync(DB_DIR, 0o700);
-} catch {}
 
-const DB_PATH = path.join(DB_DIR, 'opencode-vpn.db');
+const DB_PATH = paths.dbPath;
 export const db = new Database(DB_PATH);
 try {
-  if (fs.existsSync(DB_PATH)) {
+  if (fs.existsSync(DB_PATH) && process.platform !== 'win32') {
     fs.chmodSync(DB_PATH, 0o600);
   }
 } catch {}

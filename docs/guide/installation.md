@@ -32,14 +32,14 @@ sudo apt update
 # Install system utilities
 sudo apt install -y curl unzip git
 
-# Verify Node.js (version 18.0.0 or higher required)
+# Verify Node.js (version 22.12.0 or higher required)
 node -v
 npm -v
 ```
 
 If Node.js is not installed, install it using the official NodeSource repository or nvm:
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
