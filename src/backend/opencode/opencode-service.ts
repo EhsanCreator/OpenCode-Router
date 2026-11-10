@@ -327,25 +327,28 @@ endlocal & exit /b %EXIT_CODE%
 $httpPort = if ($env:OPENCODE_HTTP_PROXY_PORT) { $env:OPENCODE_HTTP_PROXY_PORT } else { "10809" }
 $socksPort = if ($env:OPENCODE_SOCKS_PROXY_PORT) { $env:OPENCODE_SOCKS_PROXY_PORT } else { "10808" }
 
+# Snapshot original proxy environment variables using canonical case-insensitive keys.
+# On Windows, environment variable names are case-insensitive; duplicate case variants in hashtables cause parser errors.
 $oldEnv = @{
-    http_proxy  = $env:http_proxy
-    https_proxy = $env:https_proxy
-    HTTP_PROXY  = $env:HTTP_PROXY
-    HTTPS_PROXY = $env:HTTPS_PROXY
-    all_proxy   = $env:all_proxy
-    ALL_PROXY   = $env:ALL_PROXY
-    no_proxy    = $env:no_proxy
-    NO_PROXY    = $env:NO_PROXY
+    HTTP_PROXY  = [Environment]::GetEnvironmentVariable("HTTP_PROXY", "Process")
+    HTTPS_PROXY = [Environment]::GetEnvironmentVariable("HTTPS_PROXY", "Process")
+    ALL_PROXY   = [Environment]::GetEnvironmentVariable("ALL_PROXY", "Process")
+    NO_PROXY    = [Environment]::GetEnvironmentVariable("NO_PROXY", "Process")
 }
 
-$env:http_proxy  = "http://127.0.0.1:$httpPort"
-$env:https_proxy = "http://127.0.0.1:$httpPort"
-$env:HTTP_PROXY  = "http://127.0.0.1:$httpPort"
-$env:HTTPS_PROXY = "http://127.0.0.1:$httpPort"
-$env:all_proxy   = "socks5://127.0.0.1:$socksPort"
-$env:ALL_PROXY   = "socks5://127.0.0.1:$socksPort"
-$env:no_proxy    = "localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,192.168.18.1"
-$env:NO_PROXY    = "localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,192.168.18.1"
+$httpProxyUrl = "http://127.0.0.1:$httpPort"
+$socksProxyUrl = "socks5://127.0.0.1:$socksPort"
+$noProxyList = "localhost,127.0.0.1,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,192.168.18.1"
+
+$env:HTTP_PROXY  = $httpProxyUrl
+$env:HTTPS_PROXY = $httpProxyUrl
+$env:ALL_PROXY   = $socksProxyUrl
+$env:NO_PROXY    = $noProxyList
+
+$env:http_proxy  = $httpProxyUrl
+$env:https_proxy = $httpProxyUrl
+$env:all_proxy   = $socksProxyUrl
+$env:no_proxy    = $noProxyList
 
 # Check for external server targeting
 foreach ($arg in $args) {
@@ -419,10 +422,13 @@ try {
     exit $LASTEXITCODE
 } finally {
     foreach ($k in $oldEnv.Keys) {
-        if ($null -ne $oldEnv[$k]) {
-            [Environment]::SetEnvironmentVariable($k, $oldEnv[$k], "Process")
+        $origVal = $oldEnv[$k]
+        if ($null -ne $origVal) {
+            [Environment]::SetEnvironmentVariable($k, $origVal, "Process")
+            [Environment]::SetEnvironmentVariable($k.ToLowerInvariant(), $origVal, "Process")
         } else {
             [Environment]::SetEnvironmentVariable($k, $null, "Process")
+            [Environment]::SetEnvironmentVariable($k.ToLowerInvariant(), $null, "Process")
         }
     }
 }

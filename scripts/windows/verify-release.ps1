@@ -121,6 +121,24 @@ $launcherExists = Test-Path $launcherExe
 $results.launcher.exists = $launcherExists
 Log-Test "Native Launcher Executable (bin\opencode-vpn.exe)" $launcherExists "Path: $launcherExe"
 
+# 4b. Windows PowerShell Launcher Syntax & AST Validation
+Write-Host "`n[>>] Check 4b: Windows PowerShell Launcher (bin\opencode-vpn.ps1)" -ForegroundColor White
+$psLauncherFile = Join-Path $binDir "opencode-vpn.ps1"
+if (Test-Path $psLauncherFile) {
+    $tokens = $null
+    $errors = $null
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($psLauncherFile, [ref]$tokens, [ref]$errors)
+    $hasErrors = ($errors -and $errors.Count -gt 0)
+    if ($hasErrors) {
+        $errMsg = ($errors | ForEach-Object { $_.Message }) -join "; "
+        Log-Test "PowerShell Launcher AST Parse (bin\opencode-vpn.ps1)" $false "Parser Errors: $errMsg"
+    } else {
+        Log-Test "PowerShell Launcher AST Parse (bin\opencode-vpn.ps1)" $true "Clean parse; zero syntax or duplicate key errors"
+    }
+} else {
+    Log-Test "PowerShell Launcher (bin\opencode-vpn.ps1)" $false "Missing bin\opencode-vpn.ps1"
+}
+
 # 5. Argument Preservation & Quoting
 Write-Host "`n[>>] Check 5: Special-Character Argument Preservation" -ForegroundColor White
 $testArgs = @(
