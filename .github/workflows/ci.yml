@@ -112,6 +112,16 @@ jobs:
             if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.exe\")) { throw 'bin/opencode-vpn.exe missing from Windows package' }
             if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.cmd\")) { throw 'bin/opencode-vpn.cmd missing' }
             if (-not (Test-Path \"\$testExtractDir/bin/opencode-vpn.ps1\")) { throw 'bin/opencode-vpn.ps1 missing' }
+            Get-ChildItem -Path \$testExtractDir -Recurse -Filter *.ps1 | ForEach-Object {
+              \$toks = \$null; \$errs = \$null
+              [System.Management.Automation.Language.Parser]::ParseFile(\$_.FullName, [ref]\$toks, [ref]\$errs)
+              if (\$errs -and \$errs.Count -gt 0) { throw ('AST parse error in packaged ' + \$_.Name + ': ' + (\$errs | Out-String)) }
+            }
+            Get-ChildItem -Recurse -Filter *.ps1 | ForEach-Object {
+              \$toks = \$null; \$errs = \$null
+              [System.Management.Automation.Language.Parser]::ParseFile(\$_.FullName, [ref]\$toks, [ref]\$errs)
+              if (\$errs -and \$errs.Count -gt 0) { throw ('AST parse error in repo ' + \$_.Name + ': ' + (\$errs | Out-String)) }
+            }
           "
           echo "Portable package verified and extracted cleanly."
 
