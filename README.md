@@ -119,7 +119,7 @@ OpenCode Router provides genuine cross-platform support with dedicated native la
 | **Windows 11 (x64)** | **Tested & Verified** | Native PowerShell & CMD launchers; per-user AppData storage; native `xray.exe`. |
 | **Windows 10 (x64)** | **Tested & Verified** | Native PowerShell & CMD launchers; build 19041+ supported. |
 | **Ubuntu 24.04 LTS (x86_64)** | **Tested & Verified** | Primary Linux development and validation environment. |
-| Ubuntu 22.04 LTS / Debian 12 | *Compatible* | Requires Node.js >= 20.19.0 or >= 22.12.0 and standard bash. |
+| Ubuntu 22.04 LTS / Debian 12 | *Compatible* | Requires Node.js >= 22.12.0 and standard bash. |
 | Windows 11 (ARM64) | *Implemented (Unverified)* | ARM64 asset provisioned; unverified on physical ARM64 hardware. |
 | macOS (Apple Silicon / Intel) | *Compatible* | Native bash launcher and macOS Xray binaries supported. |
 
@@ -132,13 +132,13 @@ OpenCode Router provides genuine cross-platform support with dedicated native la
 
 ### On Windows
 - **Operating System**: Windows 10 (Build 19041+) or Windows 11 (64-bit x64 primary target; ARM64 asset implemented)
-- **Node.js Runtime**: v20.19.0+ or v22.12.0+ ([Download Node.js](https://nodejs.org)) — *strictly required by Vite 8*
+- **Node.js Runtime**: v22.12.0+ ([Download Node.js](https://nodejs.org)) — *strictly required by better-sqlite3 and Vite 8*
 - **Shell**: Windows PowerShell 5.1+, PowerShell 7+, Windows Terminal, or CMD
 - **Target Application**: OpenCode CLI installed (`npm install -g opencode-ai`)
 
 ### On Linux
 - **Operating System**: Ubuntu 24.04 LTS / Debian 12 / Compatible Linux (64-bit)
-- **Node.js Runtime**: v20.19.0+ or v22.12.0+ (`node -v`) — *strictly required by Vite 8*
+- **Node.js Runtime**: v22.12.0+ (`node -v`) — *strictly required by better-sqlite3 and Vite 8*
 - **Package Manager**: npm (`npm -v`)
 - **Target Application**: OpenCode CLI installed (e.g. `/usr/local/bin/opencode`)
 

@@ -23,7 +23,7 @@ $osArch = (Get-CimInstance Win32_Processor).AddressWidth
 Write-Host "[[v]] Operating System: " -NoNewline -ForegroundColor Green
 Write-Host "$($os.Caption) ($osArch-bit, Build $($os.BuildNumber))"
 
-# 2. Node.js Runtime (Vite 8 requires Node.js 20.19+ or 22.12+)
+# 2. Node.js Runtime (better-sqlite3 and Vite 8 require Node.js >= 22.12.0)
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCmd) {
     $nodeVer = (node -v).Trim().TrimStart('v')
@@ -31,21 +31,18 @@ if ($nodeCmd) {
     $major = [int]$parts[0]
     $minor = if ($parts.Length -gt 1) { [int]$parts[1] } else { 0 }
 
-    $isVite8Compatible = ($major -eq 20 -and $minor -ge 19) -or ($major -ge 22 -and $minor -ge 12) -or ($major -gt 22)
+    $isNodeCompatible = ($major -eq 22 -and $minor -ge 12) -or ($major -gt 22)
 
-    if ($isVite8Compatible) {
+    if ($isNodeCompatible) {
         Write-Host "[[v]] Node.js Runtime:  " -NoNewline -ForegroundColor Green
         Write-Host "v$nodeVer ($($nodeCmd.Source))"
-    } elseif ($major -ge 20) {
-        Write-Host "[!] Node.js Runtime:  " -NoNewline -ForegroundColor Yellow
-        Write-Host "v$nodeVer (Warning: Vite 8 requires Node.js 20.19+ or 22.12+)"
     } else {
         Write-Host "[[x]] Node.js Runtime:  " -NoNewline -ForegroundColor Red
-        Write-Host "v$nodeVer (Incompatible: Vite 8 strictly requires Node.js 20.19+ or 22.12+)"
+        Write-Host "v$nodeVer (Incompatible: better-sqlite3 and Vite 8 strictly require Node.js >= 22.12.0)"
         $allPassed = $false
     }
 } else {
-    Write-Host "[[x]] Node.js Runtime:  Not found in PATH! (Node.js 20.19+ or 22.12+ required: https://nodejs.org)" -ForegroundColor Red
+    Write-Host "[[x]] Node.js Runtime:  Not found in PATH! (Node.js >= 22.12.0 required: https://nodejs.org)" -ForegroundColor Red
     $allPassed = $false
 }
 

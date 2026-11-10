@@ -34,8 +34,8 @@ jobs:
       - name: Install Dependencies
         shell: bash
         run: |
-          npm install --no-audit 2>&1 | tee npm-install.log || {
-            echo "::error::$(tail -n 10 npm-install.log | tr '\n' ' ')"
+          npm ci 2>&1 | tee npm-ci.log || {
+            echo "::error::$(tail -n 10 npm-ci.log | tr '\n' ' ')"
             exit 1
           }
 

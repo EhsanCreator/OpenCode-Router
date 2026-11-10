@@ -98,7 +98,7 @@ OpenCode Router v${version} - Native Windows Portable Edition
 ==========================================================
 
 Prerequisites (Host Machine):
-  1. Node.js 20.19+ or 22.12+ (https://nodejs.org) [Required for Vite 8 / Server runtime]
+  1. Node.js 22.12+ (https://nodejs.org) [Required for Vite 8 / better-sqlite3 / Server runtime]
   2. OpenCode CLI: npm install -g opencode-ai
 
 Note on Architecture:
